@@ -1,0 +1,6 @@
+*.db
+.env
+.idea
+.VSCodeCounter
+configs/secrets/*
+secrets.toml
