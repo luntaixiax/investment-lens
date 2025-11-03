@@ -1,0 +1,79 @@
+from functools import lru_cache
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine, create_engine
+from fastapi import Depends
+from src.app.repository.user import UserRepository
+from src.app.utils.secrets import get_async_db_url, get_sync_db_url
+
+def get_async_engine(db: str = 'primary') -> AsyncEngine:
+    """
+    Get an async engine.
+
+    Args:
+        db (str): The database name.
+
+    Returns:
+        AsyncEngine: The async engine.
+    """
+    db_url = get_async_db_url(db)
+    async_engine = create_async_engine(
+        db_url,
+        echo=True,
+        future=True,
+        pool_size=10,
+    )
+    return async_engine
+
+def get_sync_engine(db: str = 'primary') -> Engine:
+    """
+    Get a sync engine.
+
+    Args:
+        db (str): The database name.
+
+    Returns:
+        Engine: The sync engine.
+    """
+    db_url = get_sync_db_url(db)
+    sync_engine = create_engine(db_url, pool_size=10)
+    return sync_engine
+
+
+async def get_async_session() -> AsyncSession:
+    """
+    Get an async session.
+
+    Returns:
+        AsyncSession: The async session.
+
+    """
+    async_engine = get_async_engine()
+    async_session = sessionmaker(
+        bind=async_engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
+        yield session
+        
+        
+async def get_user_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> UserRepository:
+    return UserRepository(db_session=async_session)
+        
+        
+if __name__ == "__main__":
+    from sqlalchemy_utils import database_exists, create_database, drop_database
+    from sqlalchemy import create_engine
+    from src.app.repository.orm import SQLModelWithSort
+    from src.app.utils.secrets import get_sync_engine
+    
+    sync_engine = get_sync_engine()
+    
+    if not database_exists(sync_engine.url):
+        create_database(sync_engine.url)
+        
+    SQLModelWithSort.create_table_within_collection(
+        collection='primary',
+        engine=sync_engine
+    )

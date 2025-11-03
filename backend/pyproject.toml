@@ -6,10 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "aiobotocore==2.17",
+    "aiomysql>=0.3.2",
     "alembic==1.16.4",
     "anytree==2.12.1",
     "babel==2.13.0",
-    "bcrypt>=4.3.0",
+    "bcrypt>=4.3.0,<5.0.0",
     "borb==2.1.18",
     "botocore==1.35.93",
     "currencyconverter==0.17.11",

@@ -1,0 +1,55 @@
+from sqlalchemy.engine import Engine
+from sqlmodel import Field, SQLModel, Column, create_engine 
+from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, Date, DECIMAL
+from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceType
+from sqlalchemy.exc import NoResultFound, IntegrityError
+from datetime import date
+
+def get_class_by_tablename(tablename):
+    """Return class reference mapped to table.
+
+    :param tablename: String with name of table.
+    :return: Class reference or None.
+    """
+    for c in SQLModelWithSort._sa_registry.mappers: # type: ignore
+        if hasattr(c, 'class_') and c.class_.__tablename__ == tablename:
+            return c.class_
+
+class SQLModelWithSort(SQLModel):
+    
+    @classmethod
+    def create_table_within_collection(cls, collection: str, engine: Engine):
+        # SQLModelWithSort.metadata.create_all(self.user_engine)
+        # will create all tables defined across all files, even from different db
+        # filter to only create tables labeled under specific collection
+        for table in SQLModelWithSort.metadata.sorted_tables:
+            tb_cls = get_class_by_tablename(table.name)
+            if tb_cls.__collection__ == collection: # type: ignore
+                table.create(bind=engine, checkfirst=True) # only create if not exist
+
+    
+    @classmethod
+    def sort_for_backup(cls, rows):
+        # sort rows from query, useful in case of backup
+        return rows
+    
+    
+class UserORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "users"
+    
+    user_id: str = Field(
+        sa_column=Column(
+            String(length = 15), 
+            primary_key = True, 
+            nullable = False)
+    )
+    username: str = Field(sa_column=Column(String(length = 20),  nullable = False, unique = True))
+    hashed_password: str = Field(sa_column=Column(String(length = 72),  nullable = False))
+    is_admin: bool = Field(
+        sa_column=Column(
+            Boolean(create_constraint=True), 
+            default = False, 
+            nullable = False
+        )
+    )
