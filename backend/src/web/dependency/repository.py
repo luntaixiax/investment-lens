@@ -6,9 +6,15 @@ from fastapi import Depends
 from src.app.repository.user import UserRepository
 from src.app.utils.secrets import get_async_db_url, get_sync_db_url
 
+# Global state for caching engine and sessionmaker
+_async_engine: AsyncEngine | None = None
+_async_session_maker: sessionmaker[AsyncSession] | None = None
+
 async def get_async_engine(db: str = 'primary') -> AsyncEngine:
     """
-    Get an async engine.
+    Get an async engine (cached globally for efficiency).
+    
+    Creates the engine once and reuses it for all subsequent requests.
 
     Args:
         db (str): The database name.
@@ -16,18 +22,22 @@ async def get_async_engine(db: str = 'primary') -> AsyncEngine:
     Returns:
         AsyncEngine: The async engine.
     """
-    db_url = await get_async_db_url(db)
-    async_engine = create_async_engine(
-        db_url,
-        echo=True,
-        future=True,
-        pool_size=10,
-    )
-    return async_engine
+    global _async_engine
+    
+    if _async_engine is None:
+        db_url = await get_async_db_url(db)
+        _async_engine = create_async_engine(
+            db_url,
+            echo=True,
+            future=True,
+            pool_size=10,
+        )
+    return _async_engine
 
+@lru_cache(maxsize=1)
 def get_sync_engine(db: str = 'primary') -> Engine:
     """
-    Get a sync engine.
+    Get a sync engine (cached for efficiency).
 
     Args:
         db (str): The database name.
@@ -43,16 +53,21 @@ def get_sync_engine(db: str = 'primary') -> Engine:
 async def get_async_session() -> AsyncSession:
     """
     Get an async session.
+    
+    Creates sessionmaker once and reuses it for all requests.
 
     Returns:
         AsyncSession: The async session.
-
     """
-    async_engine = await get_async_engine()
-    async_session = sessionmaker(
-        bind=async_engine, class_=AsyncSession, expire_on_commit=False
-    )
-    async with async_session() as session:
+    global _async_session_maker
+    
+    if _async_session_maker is None:
+        async_engine = await get_async_engine()
+        _async_session_maker = sessionmaker(
+            bind=async_engine, class_=AsyncSession, expire_on_commit=False
+        )
+    
+    async with _async_session_maker() as session:
         yield session
         
         
