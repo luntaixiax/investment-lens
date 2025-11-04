@@ -5,3 +5,40 @@
   font-family: 'Montserrat', sans-serif;
 }
 
+/* Color Hunt Palette - Warm Peach & Teal Theme */
+/* Inspired by: https://colorhunt.co/palette/f5e5e1f9b487427a76174143 */
+:root {
+  /* Base Colors from Color Hunt */
+  --peach-light: #f5e5e1;       /* Light peach/beige background */
+  --peach: #f9b487;             /* Warm peach accent */
+  --teal: #427a76;              /* Medium teal */
+  --teal-dark: #174143;         /* Dark teal */
+  
+  /* Primary Colors (Teal-based) */
+  --primary: #427a76;           /* Medium teal */
+  --primary-hover: #174143;     /* Dark teal */
+  --primary-light: #e8f5f3;     /* Light teal tint */
+  
+  /* Success Colors (Green-teal) */
+  --success: #427a76;            /* Teal */
+  --success-bg: #e8f5f3;        /* Light teal background */
+  --success-text: #174143;      /* Dark teal text */
+  
+  /* Error Colors (Peach-based warning) */
+  --error: #d97706;              /* Amber-orange */
+  --error-bg: #fef3c7;           /* Light amber */
+  --error-text: #92400e;         /* Dark amber */
+  
+  /* Neutral Colors */
+  --text-primary: #174143;       /* Dark teal */
+  --text-secondary: #427a76;     /* Medium teal */
+  --text-muted: #6b7280;         /* Gray for muted text */
+  --border: #d1d5db;             /* Light gray border */
+  --border-focus: #427a76;       /* Teal focus */
+  --background: #ffffff;         /* White background */
+  --background-light: #f5e5e1;   /* Light peach background */
+  
+  /* Disabled */
+  --disabled: #9ca3af;           /* Gray */
+  --disabled-bg: #f3f4f6;        /* Light gray */
+}

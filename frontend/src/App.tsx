@@ -1,21 +1,19 @@
 import './App.css'
 import { useEffect, useState } from 'react'
-
 import axios from 'axios'
+import { Route, Routes } from 'react-router-dom';
+import Home from './pages/Home';
+import Register from './pages/Register';
+
 
 function App() {
 
-  const [welcome, setWelcome] = useState('')
-
-  useEffect(() => {
-    axios.get('/api/').then((res) => {
-      setWelcome(res.data)
-    })
-  }, [])
-
   return (
     <>
-      <h1>{welcome}</h1>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
     </>
   )
 }
