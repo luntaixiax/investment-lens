@@ -1,3 +1,4 @@
+import asyncio
 import os
 from functools import lru_cache
 from pathlib import Path
@@ -62,8 +63,9 @@ def get_secret() -> dict:
     }
     
     
-def get_async_db_url(db: str) -> str:
-    config = get_secret()['database']
+async def get_async_db_url(db: str) -> str:
+    
+    config = (await asyncio.to_thread(get_secret))['database']
     db_url = f"{config['async_driver']}://{config['username']}:{config['password']}@{config['hostname']}:{config['port']}/{db}"
     return db_url
 

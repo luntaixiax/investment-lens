@@ -6,7 +6,7 @@ from fastapi import Depends
 from src.app.repository.user import UserRepository
 from src.app.utils.secrets import get_async_db_url, get_sync_db_url
 
-def get_async_engine(db: str = 'primary') -> AsyncEngine:
+async def get_async_engine(db: str = 'primary') -> AsyncEngine:
     """
     Get an async engine.
 
@@ -16,7 +16,7 @@ def get_async_engine(db: str = 'primary') -> AsyncEngine:
     Returns:
         AsyncEngine: The async engine.
     """
-    db_url = get_async_db_url(db)
+    db_url = await get_async_db_url(db)
     async_engine = create_async_engine(
         db_url,
         echo=True,
@@ -48,7 +48,7 @@ async def get_async_session() -> AsyncSession:
         AsyncSession: The async session.
 
     """
-    async_engine = get_async_engine()
+    async_engine = await get_async_engine()
     async_session = sessionmaker(
         bind=async_engine, class_=AsyncSession, expire_on_commit=False
     )
