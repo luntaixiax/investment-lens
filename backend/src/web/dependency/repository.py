@@ -30,7 +30,10 @@ async def get_async_engine(db: str = 'primary') -> AsyncEngine:
             db_url,
             echo=True,
             future=True,
-            pool_size=10,
+            pool_size=15, # Base pool size
+            max_overflow=5,   # Extra connections when pool is full (explicit)
+            pool_pre_ping=True, # Verify connection before using (prevents stale connections)
+            pool_recycle=3600, # Recycle connections after 1 hour
         )
     return _async_engine
 
