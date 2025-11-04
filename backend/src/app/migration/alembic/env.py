@@ -1,9 +1,20 @@
+import sys
+from pathlib import Path
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+# Add parent directories to path to import models
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent.parent))
+
+# Import models to register them with SQLModel
+from src.app.repository.orm import SQLModelWithSort, UserORM
+
+# Import all other models here as you add them
+# from src.app.repository.other_models import OtherORM
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,11 +25,15 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+# Get metadata from SQLModel
+target_metadata = SQLModelWithSort.metadata
+
+# Override database URL from secrets if not in alembic.ini
+from src.app.utils.secrets import get_sync_db_url
+if config.get_main_option("sqlalchemy.url") == "driver://user:pass@localhost/dbname":
+    # Use actual database URL from secrets
+    db_url = get_sync_db_url("primary")
+    config.set_main_option("sqlalchemy.url", db_url)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -39,6 +54,9 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    if url == "driver://user:pass@localhost/dbname":
+        url = get_sync_db_url("primary")
+    
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -57,8 +75,13 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Get database URL from config or secrets
+    url = config.get_main_option("sqlalchemy.url")
+    if url == "driver://user:pass@localhost/dbname":
+        url = get_sync_db_url("primary")
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        {"sqlalchemy.url": url},
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
