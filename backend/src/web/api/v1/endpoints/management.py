@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
+from starlette.responses import JSONResponse
 from src.app.service.auth import AuthService
 from src.app.model.user import Token, UserCreate, User, UserRegister
 from src.app.service.user import UserService
 from src.web.dependency.service import get_user_service
-from src.web.dependency.auth import get_admin_user, get_auth_service
+from src.web.dependency.auth import get_admin_user, get_auth_service, get_current_user
 
 router = APIRouter(prefix="/management", tags=["management"])
 
@@ -37,14 +38,47 @@ async def register(
     await user_service.create_user(user_)
     
 
-@router.post("/login", response_model=Token)
+@router.post("/login")
 async def login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     auth_service: AuthService = Depends(get_auth_service),
-) -> Token:
-    return await auth_service.login(
+) -> JSONResponse:
+    """Login the user and set the JWT as a cookie.
+    The attacker can steal your JWT, send it to their own server, and impersonate your user until it expires.
+    When you set a cookie like this, the browser stores it, but does not allow any JavaScript to read it.
+    Only the browser itself can attach it automatically to outgoing requests to your backend (if CORS allows).
+    So even if the frontend page has an XSS bug, the attacker cannot steal the token.
+    """
+
+    token_response = await auth_service.login(
         username=user_credentials.username, 
         password=user_credentials.password
+    )
+    response = JSONResponse(
+        content={"message": "Login successful", "token_type": token_response.token_type}, 
+    )
+    response.set_cookie(
+        key="access_token",
+        value=token_response.access_token,
+        httponly=True,
+        secure=True,
+        samesite="Lax"
+    )
+    return response
+
+@router.post("/logout")
+async def logout(
+    current_user: User = Depends(get_current_user),
+) -> JSONResponse:
+    """Logout the authenticated user."""
+    response = JSONResponse(
+        content={"message": "Logout successful", "user_id": current_user.user_id}, 
+    )
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=True,
+        samesite="Lax"
     )
     
 @router.post("/remove_user")

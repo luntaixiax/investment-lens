@@ -79,8 +79,9 @@ class AuthService:
             algorithm=auth_config['algorithm'],
             expires_minutes=int(auth_config['expires_minutes'])
         )
+        
         return Token(access_token=access_token, token_type="bearer")
-    
+        
     async def verify_token(self, token: str) -> User:
         try:
             # get auth config is IO bounded operation, so we run it in a separate thread to avoid blocking the main thread
