@@ -38,7 +38,12 @@ export default function LoginForm() {
             if (axios.isAxiosError(error)) {
 				if (error.response?.status === 403) {
 					setMessageOnLogin({
-						message: "username or password is incorrect",
+						message: error.response.data.message,
+						success: false
+					});
+				} else if (error.response?.status === 429) {
+					setMessageOnLogin({
+						message: error.response.data.message,
 						success: false
 					});
 				} else {

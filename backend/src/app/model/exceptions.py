@@ -57,3 +57,9 @@ class PermissionDeniedError(PermissionError):
         super().__init__(message)
         self.message = message
         self.details = details
+        
+class StrongPermissionDeniedError(PermissionError):
+    def __init__(self, message: str = "Too many login attempts", details: str = "N/A"):
+        super().__init__(message)
+        self.message = message
+        self.details = details

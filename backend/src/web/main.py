@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.responses import HTMLResponse, JSONResponse
 from src.web.api.v1.api import api_router
 from src.app.model.exceptions import AlreadyExistError, NotExistError, FKNotExistError, \
-    FKNoDeleteUpdateError, OpNotPermittedError, NotMatchWithSystemError, PermissionDeniedError
+    FKNoDeleteUpdateError, OpNotPermittedError, NotMatchWithSystemError, PermissionDeniedError, \
+    StrongPermissionDeniedError
 
 app = FastAPI(
     title="FastAPI", 
@@ -35,9 +36,8 @@ async def root() -> str:
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_: Request, exc: HTTPException):
     if exc.status_code == status.HTTP_401_UNAUTHORIZED:
-        # override 401 to 403
         return JSONResponse(
-            status_code = 403,
+            status_code = 401,
             content = {
                 "message": 'Unauthorized',
                 "details": exc.detail
@@ -53,6 +53,16 @@ async def http_exception_handler(_: Request, exc: HTTPException):
 async def permission_denied_error_handler(_: Request, exc: PermissionDeniedError) -> JSONResponse:
     return JSONResponse(
         status_code = 403,
+        content = {
+            "message": exc.message,
+            "details": exc.details
+        },
+    )
+    
+@app.exception_handler(StrongPermissionDeniedError)
+async def strong_permission_denied_error_handler(_: Request, exc: StrongPermissionDeniedError) -> JSONResponse:
+    return JSONResponse(
+        status_code = 429,
         content = {
             "message": exc.message,
             "details": exc.details
