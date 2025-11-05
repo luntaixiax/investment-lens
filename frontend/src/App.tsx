@@ -1,23 +1,33 @@
 import './App.css'
-import { useEffect, useState } from 'react'
-import axios from 'axios'
 import { Route, Routes } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import AuthProvider from './context/AuthContext';
 import Home from './pages/Home';
-import Register from './pages/Register';
 import Login from './pages/Login';
+import Landing from './pages/Landing';
+import Register from './pages/Register';
+
+
 
 
 function App() {
 
-  return (
-    <>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </>
-  )
+	return (
+		<AuthProvider>
+			<Routes>
+				<Route path="/" element={<Landing />} />
+				<Route path="/register" element={<Register />} />
+				<Route path="/login" element={<Login />} />
+
+				{/* All protected routes go inside this (except login and register) */}
+				<Route path="/home" element={
+					<ProtectedRoute>
+						<Home />
+					</ProtectedRoute>} 
+				/>
+			</Routes>
+		</AuthProvider>
+	)
 }
 
 export default App

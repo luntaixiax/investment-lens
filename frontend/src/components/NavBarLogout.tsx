@@ -5,7 +5,7 @@ export default function NavbarLogout() {
     return (
         <nav className="navbar">
             <div className="navbar-container">
-                <Link to="/" className="navbar-logo">
+                <Link to="/home" className="navbar-logo">
                     <img src="/images/icons/LTX - logo.png" alt="Investment Lens" className="navbar-logo-image" />
                     <span>Investment Lens</span>
                 </Link>

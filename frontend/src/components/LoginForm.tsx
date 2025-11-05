@@ -1,7 +1,9 @@
 import './LoginForm.css';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 type LoginData = {
 	username: string;
@@ -15,44 +17,30 @@ type Message = {
 
 export default function LoginForm() {
 
+    const navigate = useNavigate();
     const [messageOnLogin, setMessageOnLogin] = useState<Message>({ message: '', success: false });
     // the return value is register, but not that register we understand.
     const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginData>();
 
+    const { login } = useAuth();
+
     async function onLogin(data: LoginData) {
-        try {
-            const formData = new URLSearchParams();
-            formData.append('username', data.username);
-            formData.append('password', data.password);
-            
-            await axios.post('/backend/api/v1/management/login', formData, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            });
+
+        const result = await login(data);
+        if (result.is_success) {
             setMessageOnLogin({
-                message: `Welcome back, ${data.username}!`,
+                message: result.message,
                 success: true
             });
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-				if (error.response?.status === 403) {
-					setMessageOnLogin({
-						message: error.response.data.message,
-						success: false
-					});
-				} else if (error.response?.status === 429) {
-					setMessageOnLogin({
-						message: error.response.data.message,
-						success: false
-					});
-				} else {
-					setMessageOnLogin({
-						message: `An unknown error occurred with status code: ${error.response?.status}`,
-						success: false
-					});
-				}
-			}
+
+            setTimeout(() => {
+                navigate("/home"); // redirect to homepage
+            }, 1000); // wait 1 second before redirecting
+        } else {
+            setMessageOnLogin({
+                message: result.message,
+                success: false
+            });
         }
     }
 

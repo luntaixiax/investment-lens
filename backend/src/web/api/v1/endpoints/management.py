@@ -61,10 +61,17 @@ async def login(
         key="access_token",
         value=token_response.access_token,
         httponly=True,
-        secure=True,
+        secure=False,  # Set to False for development (HTTP). Use True in production (HTTPS)
         samesite="Lax"
     )
     return response
+
+@router.get("/check_login")
+async def check_login(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Check if the user is logged in."""
+    return current_user
 
 @router.post("/logout")
 async def logout(
@@ -77,9 +84,10 @@ async def logout(
     response.delete_cookie(
         key="access_token",
         httponly=True,
-        secure=True,
+        secure=False,  # Set to False for development (HTTP). Use True in production (HTTPS)
         samesite="Lax"
     )
+    return response
     
 @router.post("/remove_user")
 async def remove_user(
