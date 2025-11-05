@@ -1,0 +1,11 @@
+.landing-page-container {
+    padding-top: 8rem;
+    padding-bottom: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    margin: 0 auto;
+    min-height: 100vh;
+    width: 100%;
+
+    max-width: 1200px;
+}
