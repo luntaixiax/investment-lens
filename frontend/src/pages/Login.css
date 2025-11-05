@@ -1,0 +1,45 @@
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+    background-image: url('/images/backgrounds/wallhaven-m3kwdm.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+
+}
+
+.login-page-container {
+    padding-top: 15rem;
+    
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.login-page-intro {
+    background-color: rgba(255, 255, 255, 0.5);
+    padding: 2.5rem;
+
+    background-image: url('/images/backgrounds/wallhaven-218yvy.jpg');
+    background-size: cover;
+    background-position: center;
+    max-width: 350px;
+
+}
+
+.login-page-intro h1 {
+    margin-top: 18rem;
+    color: var(--primary-light);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.login-page-intro p {
+    color: var(--background-light);
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}

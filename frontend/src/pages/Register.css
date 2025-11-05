@@ -24,6 +24,7 @@
 
     background-image: url('/images/backgrounds/wallhaven-76j5ze.jpg');
     background-size: cover;
+    background-position: center;
     max-width: 350px;
 
 }

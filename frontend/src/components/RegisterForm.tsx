@@ -23,7 +23,7 @@ export default function RegisterForm() {
 		// Simulate API call with a Promise
 		// await new Promise(resolve => setTimeout(resolve, 1000));
 		try {
-			await axios.post('/api/api/v1/management/register', data);
+			await axios.post('/backend/api/v1/management/register', data);
 			setMessageOnRegister({
 				message: `Welcome, ${data.username}!`,
 				success: true
