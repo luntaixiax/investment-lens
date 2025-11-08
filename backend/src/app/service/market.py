@@ -2,11 +2,14 @@ import yfinance as yf
 from currency_converter import CurrencyConverter, ECB_URL
 import asyncio
 from datetime import date, timedelta
+from yokedcache import cached
 import pandas as pd
 from src.app.model.market import PublicPropInfo
 from src.app.model.enums import CurType, PropertyType
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
+from src.app.repository.cache import cache
+
 
 class YFinanceWrapper:
     def __init__(self, symbol: str):
@@ -175,7 +178,12 @@ class FxService:
         # Parallelize all currency conversions
         rates = await asyncio.gather(*[_pull_single_currency(cur) for cur in curs])
         return list(rates)
-        
+    
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, currency, cur_dt: f"fx_rate_{currency.name}_{cur_dt}", 
+        ttl=int(timedelta(hours=1).total_seconds())
+    )
     async def _get(self, currency: CurType, cur_dt: date) -> float:
         try:
             rate = await self.fx_repository.get(currency=currency, cur_dt=cur_dt)

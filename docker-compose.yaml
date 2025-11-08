@@ -2,36 +2,56 @@ version: '3.8'
 
 services:
 
-  database:
-    image: mysql:latest
-    volumes:
-      - db-volume:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_USER: "root"
-      MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/db_root_password"
-      MYSQL_USER: "luntaixia"
-      MYSQL_PASSWORD: "luntaixia"
-    secrets:
-      - db_root_password
-    ports:
-      - 3308:3306
-    command:
-      --log-error-verbosity=1
-    restart: always
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD']
-      #test: ["CMD", "whoami"]
-      interval: 10s
-      retries: 5
-      start_period: 5s
+    database:
+        image: mysql:latest
+        volumes:
+            - db-volume:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_USER: "root"
+            MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/db_root_password"
+            MYSQL_USER: "luntaixia"
+            MYSQL_PASSWORD: "luntaixia"
+        secrets:
+            - db_root_password
+        ports:
+            - 3308:3306
+        command: --log-error-verbosity=1
+        restart: always
+        healthcheck:
+            test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+            #test: ["CMD", "whoami"]
+            interval: 10s
+            retries: 5
+            start_period: 5s
+
+    cache:
+        image: redis:latest
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis_data:/data
+        restart: unless-stopped
+        command: redis-server --save 60 1 --loglevel warning
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
+            start_period: 5s
+
 
 secrets:
-   db_root_password:
-     file: ./configs/secrets/mysql_root_password.txt
+    db_root_password:
+        file: ./configs/secrets/mysql_root_password.txt
 
 volumes:
-  db-volume:
-    driver_opts:
-      type: "nfs"
-      o: "addr=${NFS_HOST},nolock,rw,soft,nfsvers=4"
-      device: ":${NFS_VOLUME_MYSQL}"
+    db-volume:
+        driver_opts:
+            type: "nfs"
+            o: "addr=${NFS_HOST},nolock,rw,soft,nfsvers=4"
+            device: ":${NFS_VOLUME_MYSQL}"
+    redis_data:
+        driver_opts:
+            type: "nfs"
+            o: "addr=${NFS_HOST},nolock,rw,soft,nfsvers=4"
+            device: ":${NFS_VOLUME_REDIS}"
