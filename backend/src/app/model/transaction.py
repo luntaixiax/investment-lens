@@ -35,6 +35,9 @@ class Transaction(BaseModel):
     price: float = Field(
         description='The price of the transaction.',
     )
+    description: str = Field(
+        description='The description of the transaction.',
+    )
     
     
     @computed_field

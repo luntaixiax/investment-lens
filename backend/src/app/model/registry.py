@@ -15,6 +15,9 @@ class Account(BaseModel):
         frozen=True,
         description='The unique identifier for the account.',
     )
+    user_id: str = Field(
+        description='The ID of the user the account belongs to.',
+    )
     acct_name: str = Field(
         description='The name/ID of the account.',
     )
@@ -49,3 +52,34 @@ class Property(BaseModel):
     currency: CurType = Field(
         description='The currency of the property.',
     ) # TODO: should it be here?
+    is_public: bool = Field(
+        default=True,
+        description='Whether the property is public to all users or only the owner, e.g., real estate, etc.',
+    )
+    
+    @model_validator(mode='after')
+    def check_is_public(self) -> 'Property':
+        # these asset belongs to the owner only, and is unique to the owner
+        if self.prop_type in [PropertyType.REAL_ESTATE, PropertyType.DEBT]:
+            self.is_public = False
+        return self
+    
+    
+class PrivatePropOwnership(BaseModel):
+    """ all properties that are not public should be owned by a user, and registered in this model """
+    
+    ownership_id: str = Field(
+        default_factory=partial( # type: ignore
+            id_generator,
+            prefix='own-',
+            length=8,
+        ),
+        frozen=True,
+        description='The unique identifier for the ownership.',
+    )
+    prop_id: str = Field(
+        description='The ID of the property the ownership belongs to.',
+    )
+    user_id: str = Field(
+        description='The ID of the user the ownership belongs to.',
+    )

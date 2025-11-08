@@ -5,7 +5,7 @@ from sqlalchemy.engine import Engine, create_engine
 from fastapi import Depends
 from src.app.repository.user import UserRepository
 from src.app.utils.secrets import get_async_db_url, get_sync_db_url
-
+from src.app.repository.market import FxRepository
 # Global state for caching engine and sessionmaker
 _async_engine: AsyncEngine | None = None
 _async_session_maker: sessionmaker[AsyncSession] | None = None
@@ -28,7 +28,7 @@ async def get_async_engine(db: str = 'primary') -> AsyncEngine:
         db_url = await get_async_db_url(db)
         _async_engine = create_async_engine(
             db_url,
-            echo=True,
+            echo=False,
             future=True,
             pool_size=15, # Base pool size
             max_overflow=5,   # Extra connections when pool is full (explicit)
@@ -49,7 +49,7 @@ def get_sync_engine(db: str = 'primary') -> Engine:
         Engine: The sync engine.
     """
     db_url = get_sync_db_url(db)
-    sync_engine = create_engine(db_url, pool_size=10)
+    sync_engine = create_engine(db_url, pool_size=10, echo=False)
     return sync_engine
 
 
@@ -78,6 +78,11 @@ async def get_user_repository(
     async_session: AsyncSession = Depends(get_async_session)
 ) -> UserRepository:
     return UserRepository(db_session=async_session)
+
+async def get_fx_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> FxRepository:
+    return FxRepository(db_session=async_session)
         
         
 if __name__ == "__main__":

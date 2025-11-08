@@ -4,6 +4,9 @@ from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, 
 from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceType
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from datetime import date
+from src.app.model.enums import CurType
+
+
 
 def get_class_by_tablename(tablename):
     """Return class reference mapped to table.
@@ -52,4 +55,22 @@ class UserORM(SQLModelWithSort, table=True):
             default = False, 
             nullable = False
         )
+    )
+    
+class FxORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "currency"
+    
+    currency: CurType = Field(
+        sa_column=Column(
+            ChoiceType(CurType, impl = Integer()), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    cur_dt: date = Field(
+        sa_column=Column(Date(), primary_key = True, nullable = False)
+    )
+    rate: float = Field(
+        sa_column=Column(DECIMAL(15, 5, asdecimal=False), nullable = False)
     )

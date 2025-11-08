@@ -22,15 +22,16 @@ class CurType(IntEnum):
 class PropertyType(IntEnum):
     CASH = 0
     MONEY_MARKET = 1
-    BOMD = 2
+    BOND = 2
     STOCK = 3
-    ETF = 4
-    FUND = 5
-    DERIVATIVE = 6
-    REAL_ESTATE = 7
-    CRYPTO = 8
-    DEBT = 9 # personal debt
-    OTHER = 10
+    ETF = 4 # self-trading funds
+    FUND_PUB = 5 # mutual funds
+    FUND_PRIV = 6 # private funds
+    DERIVATIVE = 7
+    REAL_ESTATE = 8
+    CRYPTO = 9
+    DEBT = 10 # personal debt
+    OTHER = 11
     
 @unique
 class PlanType(IntEnum):

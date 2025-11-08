@@ -16,7 +16,7 @@ async def get_auth_service(
 
 async def get_current_user(
     token: str | None = Depends(oauth2_scheme),
-    access_token: str | None = Cookie(None),
+    access_token: str | None = Cookie(None, include_in_schema=False),
     auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
     """
