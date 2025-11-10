@@ -318,7 +318,7 @@ requires-dist = [
     { name = "bcrypt", specifier = ">=4.3.0,<5.0.0" },
     { name = "borb", specifier = "==2.1.18" },
     { name = "botocore", specifier = "==1.35.93" },
-    { name = "currencyconverter", specifier = "==0.17.11" },
+    { name = "currencyconverter", specifier = "==0.18.12" },
     { name = "dacite", specifier = "==1.8.1" },
     { name = "fastapi", specifier = "==0.115.11" },
     { name = "httpx", specifier = "==0.28.1" },
@@ -739,11 +739,11 @@ wheels = [
 
 [[package]]
 name = "currencyconverter"
-version = "0.17.11"
+version = "0.18.12"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b3/6a/da2a8d49f66d5dceb090059126b03e44a9c5e2eca1be7f2e52ad7ccf3910/CurrencyConverter-0.17.11.tar.gz", hash = "sha256:f7b46ce34c8bf0f176f358511480d4d9ba3247e4037e63429069af05609b8894", size = 3773586, upload-time = "2023-09-28T14:47:41.867Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/35/35616bc21b6a10ae5b35776ca4005eca5b4d96a3017e4858862a909b123f/currencyconverter-0.18.12.tar.gz", hash = "sha256:ca988e2a53fd0a480501b786fd4dfa8f18dbc1f5043625f4c3d1ed5a585de854", size = 3828166, upload-time = "2025-11-04T08:46:56.434Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/dc/143cd0ed1e4bdf6b02b6ea6ed86e3b96de90db8b300dec4ff23d0f945333/CurrencyConverter-0.17.11-py3-none-any.whl", hash = "sha256:5e5262ea50a5fc79b7f2f823780e452c9c27750724bf3000b4bf1c1faa59335d", size = 579794, upload-time = "2023-09-28T14:47:39.651Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/9f/a516d36adf4a36ac163182816a2b7ec1952eecd1ff78bb4c97b214b76233/currencyconverter-0.18.12-py3-none-any.whl", hash = "sha256:9b60f099a7c8bb965c01678c7be1e282c49ccf7453adee23633658b2704112ba", size = 634106, upload-time = "2025-11-04T08:46:54.784Z" },
 ]
 
 [[package]]

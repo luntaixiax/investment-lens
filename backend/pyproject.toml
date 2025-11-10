@@ -13,7 +13,7 @@ dependencies = [
     "bcrypt>=4.3.0,<5.0.0",
     "borb==2.1.18",
     "botocore==1.35.93",
-    "currencyconverter==0.17.11",
+    "currencyconverter==0.18.12",
     "dacite==1.8.1",
     "fastapi==0.115.11",
     "httpx==0.28.1",

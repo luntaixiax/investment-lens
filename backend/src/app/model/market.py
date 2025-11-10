@@ -3,6 +3,18 @@ from datetime import date
 from pydantic import BaseModel, ConfigDict, Field, model_validator, computed_field
 from src.app.model.enums import CurType, PropertyType
 
+class FxRate(BaseModel):
+    currency: CurType = Field(
+        description='The currency of the property.',
+    )
+    cur_dt: date = Field(
+        description='The date of the property.',
+    )
+    rate: float = Field(
+        description='The rate of the property.',
+    )
+    
+
 class PublicPropInfo(BaseModel):
     
     symbol: str = Field(

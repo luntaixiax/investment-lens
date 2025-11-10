@@ -6,6 +6,7 @@ from yokedcache import cached
 import pandas as pd
 from src.app.model.market import PublicPropInfo
 from src.app.model.enums import CurType, PropertyType
+from src.app.model.market import FxRate
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
 from src.app.repository.cache import cache
@@ -94,90 +95,54 @@ class YFinanceWrapper:
         df = df[(df.index.date >= start_date) & (df.index.date <= end_date)]
         return df[['open', 'high', 'low', 'close', 'adj_close', 'volume', 'stock_splits', 'dividends', 'split_factor']]
     
+
+FALL_BACK_CUR = {
+    CurType.MOP : CurType.HKD
+}
+FALL_BACK_FX = {
+    CurType.TWD: 33.5,
+    CurType.CUP: 25.41
+}
+CURRENCY_CONVERTER = CurrencyConverter(
+    currency_file = ECB_URL,
+    fallback_on_missing_rate = True,
+    fallback_on_missing_rate_method = 'linear_interpolation',
+    fallback_on_wrong_date = True, 
+    ref_currency = CurType.EUR.name # global base currency
+)
+CURRENCY_CONVERTER_CURRENCIES = CURRENCY_CONVERTER.currencies
+
+class CurConverterWrapper:
+    
+    @classmethod
+    def pull(cls, cur_dt: date, currency: CurType) -> FxRate:
+        currencies = CURRENCY_CONVERTER_CURRENCIES
+        if currency.name not in currencies: # type: ignore
+            cur_fallback = FALL_BACK_CUR.get(currency)
+            if cur_fallback is None:
+                rate = FALL_BACK_FX.get(currency)
+                if rate is None:
+                    raise ValueError(f"No fallback rate found for currency {currency.name}")
+                return FxRate(currency=currency, cur_dt=cur_dt, rate=rate)
+        else:
+            cur_fallback = currency
+        
+        rate = CURRENCY_CONVERTER.convert(
+            amount = 100, 
+            currency = CurType.EUR.name, # global base currency
+            new_currency = cur_fallback.name, 
+            date = cur_dt
+        )
+        return FxRate(currency=currency, cur_dt=cur_dt, rate=rate)
+    
+    @classmethod
+    async def async_pull(cls, cur_dt: date, currency: CurType) -> FxRate:
+        return await asyncio.to_thread(cls.pull, cur_dt, currency)
     
 class FxService:
-    GLOBAL_BASE_CUR = CurType.EUR
-    FALL_BACK_CUR = {
-        CurType.MOP : CurType.HKD
-    }
-    FALL_BACK_FX = {
-        CurType.TWD: 33.5,
-        CurType.CUP: 25.41
-    }
     
     def __init__(self, fx_repository: FxRepository):
         self.fx_repository = fx_repository
-        self.currency_converter = CurrencyConverter(
-            currency_file = ECB_URL,
-            fallback_on_missing_rate = True,
-            fallback_on_missing_rate_method = 'last_known',
-            fallback_on_wrong_date = True, 
-            ref_currency = self.GLOBAL_BASE_CUR.name
-        )
-            
-    async def pull(self, cur_dt: date, overwrite: bool = False):
-        # fresh new run -- pull all at one time
-        existing_fxs = await self.fx_repository.get_fx_on_date(cur_dt=cur_dt)
-        existing_fxs = list(existing_fxs.keys())
-        if len(existing_fxs) == 0:
-            rates = await self._pull(curs = CurType, cur_dt = cur_dt) # type: ignore
-            await self.fx_repository.adds(
-                currencies=[cur for cur in CurType],
-                cur_dt=cur_dt,
-                rates=rates
-            )
-            return
-        
-        if overwrite:
-            rates = await self._pull(curs = CurType, cur_dt = cur_dt) # type: ignore
-            # Batch update/adds in a single transaction (more efficient than parallel commits)
-            await self.fx_repository.updates_or_adds(
-                currencies=[cur for cur in CurType],
-                cur_dt=cur_dt,
-                rates=rates,
-                existing_currencies=existing_fxs
-            )
-        else:
-            # have at least some existing values
-            missing_fxs = [cur for cur in CurType if cur not in existing_fxs]
-            rates = await self._pull(curs = missing_fxs, cur_dt = cur_dt)
-            # Batch add in a single transaction (more efficient than parallel commits)
-            await self.fx_repository.adds(
-                currencies=missing_fxs,
-                cur_dt=cur_dt,
-                rates=rates
-            )   
-            
-    async def _pull(self, curs: list[CurType], cur_dt: date) -> list[float]:
-        # pull fx rates at given date
-        
-        # for 100 base currency, how much local currency is it
-        currencies = self.currency_converter.currencies
-        
-        async def _pull_single_currency(cur: CurType) -> float:
-            """Pull rate for a single currency."""
-            if cur.name not in currencies: # type: ignore
-                cur_fallback = self.FALL_BACK_CUR.get(cur)
-                if cur_fallback is None:
-                    rate = self.FALL_BACK_FX.get(cur)
-                    if rate is None:
-                        raise ValueError(f"No fallback rate found for currency {cur.name}")
-                    return rate
-            else:
-                cur_fallback = cur
-            
-            rate = await asyncio.to_thread(
-                self.currency_converter.convert, # type: ignore  # IO bounded operation
-                amount = 100, 
-                currency = self.GLOBAL_BASE_CUR.name, 
-                new_currency = cur_fallback.name, 
-                date = cur_dt
-            )
-            return round(rate, 4)
-        
-        # Parallelize all currency conversions
-        rates = await asyncio.gather(*[_pull_single_currency(cur) for cur in curs])
-        return list(rates)
     
     @cached(
         cache=cache, 
@@ -185,13 +150,7 @@ class FxService:
         ttl=int(timedelta(hours=1).total_seconds())
     )
     async def _get(self, currency: CurType, cur_dt: date) -> float:
-        try:
-            rate = await self.fx_repository.get(currency=currency, cur_dt=cur_dt)
-        except NotExistError:
-            await self.pull(cur_dt=cur_dt, overwrite=False)
-            return await self.fx_repository.get(currency=currency, cur_dt=cur_dt)
-        else:
-            return rate
+        return await self.fx_repository.get(currency=currency, cur_dt=cur_dt)
     
     async def convert(self, amount: float, src_currency: CurType, tgt_currency: CurType, cur_dt: date) -> float:
         # convert from src_currency to base currency
@@ -199,3 +158,16 @@ class FxService:
         tgt_fx = await self._get(tgt_currency, cur_dt=cur_dt)
         src_fx = await self._get(src_currency, cur_dt=cur_dt)
         return amount * tgt_fx / src_fx
+    
+    async def get_hist_fx(self, currency: CurType, start_date: date, end_date: date) -> list[FxRate]:
+        return await self.fx_repository.get_hist_fx(currency=currency, start_date=start_date, end_date=end_date)
+    
+    async def download_fx_rates(self, cur_dt: date):
+        fx_rates = await asyncio.gather(*[CurConverterWrapper.async_pull(cur_dt, cur) for cur in CurType])
+        await self.fx_repository.remove_by_date(cur_dt) # remove all existing fx rates for the date
+        await self.fx_repository.adds(fx_rates)
+
+    async def download_missing_fx_rates(self, start_date: date, end_date: date):
+        missing_dates = await self.fx_repository.find_missing_dates(start_date, end_date)
+        fx_rates = await asyncio.gather(*[CurConverterWrapper.async_pull(cur_dt, cur) for cur_dt in missing_dates for cur in CurType])
+        await self.fx_repository.adds(fx_rates)
