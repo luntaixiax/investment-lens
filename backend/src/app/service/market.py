@@ -169,5 +169,8 @@ class FxService:
 
     async def download_missing_fx_rates(self, start_date: date, end_date: date):
         missing_dates = await self.fx_repository.find_missing_dates(start_date, end_date)
-        fx_rates = await asyncio.gather(*[CurConverterWrapper.async_pull(cur_dt, cur) for cur_dt in missing_dates for cur in CurType])
+        fx_rates = await asyncio.gather(
+            *[CurConverterWrapper.async_pull(cur_dt, cur) 
+            for cur_dt in missing_dates for cur in CurType]
+        )
         await self.fx_repository.adds(fx_rates)

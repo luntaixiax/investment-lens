@@ -4,6 +4,8 @@ from src.app.service.market import FxService
 from src.web.dependency.service import get_fx_service
 from datetime import date
 from src.app.model.market import FxRate
+from src.web.dependency.auth import get_admin_user
+from src.app.model.user import User
 
 router = APIRouter(
     prefix="/market",
@@ -32,7 +34,8 @@ async def get_hist_fx(
 @router.post("/fx/download_fx_rates")
 async def download_fx_rates(
     cur_dt: date,
-    fx_service: FxService = Depends(get_fx_service)
+    fx_service: FxService = Depends(get_fx_service),
+    admin_user: User = Depends(get_admin_user)
 ) -> None:
     await fx_service.download_fx_rates(cur_dt)
     
@@ -40,6 +43,7 @@ async def download_fx_rates(
 async def download_missing_fx_rates(
     start_date: date,
     end_date: date,
-    fx_service: FxService = Depends(get_fx_service)
+    fx_service: FxService = Depends(get_fx_service),
+    admin_user: User = Depends(get_admin_user)
 ) -> None:
     await fx_service.download_missing_fx_rates(start_date, end_date)
