@@ -58,25 +58,6 @@ export function CurrencyChart({ fxRates }: { fxRates: FxRate[] }) {
                         return null;
                     }}
                 />
-                <Legend 
-                    content={({ payload }) => {
-                        if (payload && payload.length > 0) {
-                            // Filter to only show Line - find entry with stroke color
-                            const linePayload = payload.find(p => {
-                                return (p as any).stroke && (p as any).stroke !== 'none';
-                            }) || payload[payload.length - 1]; // Fallback to last entry
-                            
-                            if (linePayload) {
-                                return (
-                                    <div style={{ textAlign: 'center', padding: '10px' }}>
-                                        <span style={{ color: linePayload.color }}>Exchange Rate</span>
-                                    </div>
-                                );
-                            }
-                        }
-                        return null;
-                    }}
-                />
                 <defs>
                     <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#427a76" stopOpacity={0.8}/>
