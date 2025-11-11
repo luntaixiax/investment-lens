@@ -6,7 +6,7 @@ from yokedcache import cached
 import pandas as pd
 from src.app.model.market import PublicPropInfo
 from src.app.model.enums import CurType, PropertyType
-from src.app.model.market import FxRate, FxPoint
+from src.app.model.market import FxRate, FxPoint, YFinancePricePoint
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
 from src.app.repository.cache import cache
@@ -26,44 +26,54 @@ class YFinanceWrapper:
         
     def get_public_prop_info(self) -> PublicPropInfo:
         
-        info = self.yf_ticker.get_info()
-        quote_type = info.get('quoteType')
-        if quote_type == 'MUTUALFUND':
-            prop_type = PropertyType.FUND_PUB
-        elif quote_type == 'ETF':
-            prop_type = PropertyType.ETF
-        elif quote_type == 'CRYPTOCURRENCY':
-            prop_type = PropertyType.CRYPTO
-        elif quote_type == 'EQUITY':
-            prop_type = PropertyType.STOCK
-        elif quote_type == 'FUTURE':
-            prop_type = PropertyType.DERIVATIVE
-        elif quote_type == 'CRYPTOCURRENCY':
-            prop_type = PropertyType.CRYPTO
-        else:
-            prop_type = PropertyType.OTHER
+        try:
+        
+            info = self.yf_ticker.get_info()
+            quote_type = info.get('quoteType')
+            if quote_type == 'MUTUALFUND':
+                prop_type = PropertyType.FUND_PUB
+            elif quote_type == 'ETF':
+                prop_type = PropertyType.ETF
+            elif quote_type == 'CRYPTOCURRENCY':
+                prop_type = PropertyType.CRYPTO
+            elif quote_type == 'EQUITY':
+                prop_type = PropertyType.STOCK
+            elif quote_type == 'FUTURE':
+                prop_type = PropertyType.DERIVATIVE
+            elif quote_type == 'CRYPTOCURRENCY':
+                prop_type = PropertyType.CRYPTO
+            else:
+                prop_type = PropertyType.OTHER
 
-        return PublicPropInfo(
-            symbol=self.symbol,
-            name=info.get('longName'),
-            exchange=info.get('exchange'),
-            currency=CurType[info['currency']],
-            prop_type=prop_type,
-            industry=info.get('industry'),
-            sector=info.get('sector'),
-            country=info.get('country'),
-            website=info.get('website'),
-            description=info.get('longBusinessSummary'),
-        )
+            return PublicPropInfo(
+                symbol=self.symbol,
+                name=info.get('longName'),
+                exchange=info.get('exchange'),
+                currency=CurType[info['currency']],
+                prop_type=prop_type,
+                industry=info.get('industry'),
+                sector=info.get('sector'),
+                country=info.get('country'),
+                website=info.get('website'),
+                description=info.get('longBusinessSummary'),
+            )
+            
+        except Exception as e:
+            raise NotExistError(f"Error getting public property info for symbol {self.symbol}")
         
     
     def get_hist_data(self, start_date: date, end_date: date) -> pd.DataFrame:
-        df = self.yf_ticker.history(
-            start=start_date-timedelta(days=10), # to avoid holiday at beginning 
-            end=end_date+timedelta(days=10), # to avoid holiday at end
-            interval="1d", 
-            auto_adjust=False
-        )
+        try:
+            df = self.yf_ticker.history(
+                start=start_date-timedelta(days=10), # to avoid holiday at beginning
+                # make sure split factor is calculated correctly
+                end=date.today(), 
+                interval="1d", 
+                auto_adjust=False
+            )
+        except Exception as e:
+            raise NotExistError(f"Error getting historical data for symbol {self.symbol}")
+        
         # these are prices adjusted for splits only
         df = df.rename(columns={
             'Open': 'open', 
@@ -85,16 +95,42 @@ class YFinanceWrapper:
         
         df['split_factor'] = df['stock_splits'].replace(0.0, 1.0)[::-1].cumprod()[::-1]
         
-        # these are raw prices, not adjusted for splits and dividends
-        # df['raw_close'] = df["close"] * df['split_factor']
-        # df['raw_open'] = df["open"] * df['split_factor']
-        # df['raw_high'] = df["high"] * df['split_factor']
-        # df['raw_low'] = df["low"] * df['split_factor']
-        
         # filter out days outside the range
         df = df[(df.index.date >= start_date) & (df.index.date <= end_date)]
         return df[['open', 'high', 'low', 'close', 'adj_close', 'volume', 'stock_splits', 'dividends', 'split_factor']]
+
+
+class YFinanceService:
     
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, symbol: f"yfinance_exists_{symbol}", 
+        ttl=int(timedelta(hours=24).total_seconds())
+    )
+    async def exists(self, symbol: str) -> bool:
+        return await asyncio.to_thread(YFinanceWrapper(symbol).exists)
+    
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, symbol: f"yfinance_public_prop_info_{symbol}", 
+        ttl=int(timedelta(hours=24).total_seconds())
+    )
+    async def get_public_prop_info(self, symbol: str) -> PublicPropInfo:
+        return await asyncio.to_thread(YFinanceWrapper(symbol).get_public_prop_info)
+    
+    async def get_hist_data(self, symbol: str, start_date: date, end_date: date) -> list[YFinancePricePoint]:
+        df = await asyncio.to_thread(YFinanceWrapper(symbol).get_hist_data, start_date, end_date)
+        return [
+            YFinancePricePoint(
+                dt=dt.to_pydatetime().date(), 
+                close=rows.close, 
+                adj_close=rows.adj_close, 
+                volume=rows.volume, 
+                stock_splits=rows.stock_splits, 
+                dividends=rows.dividends, 
+                split_factor=rows.split_factor
+            ) for dt, rows in df.iterrows()
+        ] if not df.empty else []
 
 FALL_BACK_CUR = {
     CurType.MOP : CurType.HKD

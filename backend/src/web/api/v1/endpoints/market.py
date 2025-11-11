@@ -1,11 +1,12 @@
+from datetime import date
 from fastapi import APIRouter, Depends
 from src.app.model.enums import CurType
 from src.app.service.market import FxService
-from src.web.dependency.service import get_fx_service
-from datetime import date
-from src.app.model.market import FxRate, FxPoint
+from src.web.dependency.service import get_fx_service, get_yfinance_service
+from src.app.model.market import FxRate, FxPoint, PublicPropInfo, YFinancePricePoint
 from src.web.dependency.auth import get_admin_user
 from src.app.model.user import User
+from src.app.service.market import YFinanceService
 
 router = APIRouter(
     prefix="/market",
@@ -60,3 +61,27 @@ async def download_missing_fx_rates(
     admin_user: User = Depends(get_admin_user)
 ) -> None:
     await fx_service.download_missing_fx_rates(start_date, end_date)
+    
+    
+@router.get("/yfinance/exists")
+async def yfinance_exists(
+    symbol: str,
+    yfinance_service: YFinanceService = Depends(get_yfinance_service)
+) -> bool:
+    return await yfinance_service.exists(symbol)
+
+@router.get("/yfinance/get_public_prop_info")
+async def yfinance_get_public_prop_info(
+    symbol: str,
+    yfinance_service: YFinanceService = Depends(get_yfinance_service)
+) -> PublicPropInfo:
+    return await yfinance_service.get_public_prop_info(symbol)
+
+@router.get("/yfinance/get_hist_data")
+async def yfinance_get_hist_data(
+    symbol: str,
+    start_date: date,
+    end_date: date,
+    yfinance_service: YFinanceService = Depends(get_yfinance_service)
+) -> list[YFinancePricePoint]:
+    return await yfinance_service.get_hist_data(symbol, start_date, end_date)

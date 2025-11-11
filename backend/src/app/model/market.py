@@ -55,3 +55,30 @@ class PublicPropInfo(BaseModel):
     description: str | None = Field(
         description='The summary of the property.',
     )
+    
+class YFinancePricePoint(BaseModel):
+    dt: date = Field(
+        description='The date of the price point.',
+    )
+    close: float = Field(
+        description='The close price, adjusted for splits.',
+    )
+    adj_close: float = Field(
+        description='The adjusted close price, adjusted for splits and dividends.',
+    )
+    volume: int = Field(
+        description='The volume of the price point.',
+    )
+    stock_splits: float = Field(
+        description='The daily stock split factor, 0 for non-splitting days and > 0 for splitting days.',
+    )
+    dividends: float = Field(
+        description='The daily dividends, 0 for non-dividend days and > 0 for dividend days.',
+    )
+    split_factor: float = Field(
+        description='The cumulative split factor, calculated backwards from the last day to the first day.',
+    )
+    
+    @computed_field
+    def raw_close(self) -> float:
+        return self.close * self.split_factor
