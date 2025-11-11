@@ -3,7 +3,7 @@ from src.app.model.enums import CurType
 from src.app.service.market import FxService
 from src.web.dependency.service import get_fx_service
 from datetime import date
-from src.app.model.market import FxRate
+from src.app.model.market import FxRate, FxPoint
 from src.web.dependency.auth import get_admin_user
 from src.app.model.user import User
 
@@ -30,6 +30,19 @@ async def get_hist_fx(
     fx_service: FxService = Depends(get_fx_service)
 ) -> list[FxRate]:
     return await fx_service.get_hist_fx(currency=currency, start_date=start_date, end_date=end_date)
+
+@router.get("/fx/get_hist_fx_points")
+async def get_hist_fx_points(
+    src_currency: CurType,
+    tgt_currency: CurType,
+    start_date: date,
+    end_date: date,
+    fx_service: FxService = Depends(get_fx_service)
+) -> list[FxPoint]:
+    return await fx_service.get_hist_fx_points(
+        src_currency=src_currency, tgt_currency=tgt_currency, start_date=start_date, end_date=end_date
+    )
+
 
 @router.post("/fx/download_fx_rates")
 async def download_fx_rates(

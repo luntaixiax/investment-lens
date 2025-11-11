@@ -6,7 +6,7 @@ from yokedcache import cached
 import pandas as pd
 from src.app.model.market import PublicPropInfo
 from src.app.model.enums import CurType, PropertyType
-from src.app.model.market import FxRate
+from src.app.model.market import FxRate, FxPoint
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
 from src.app.repository.cache import cache
@@ -161,6 +161,11 @@ class FxService:
     
     async def get_hist_fx(self, currency: CurType, start_date: date, end_date: date) -> list[FxRate]:
         return await self.fx_repository.get_hist_fx(currency=currency, start_date=start_date, end_date=end_date)
+    
+    async def get_hist_fx_points(self, src_currency: CurType, tgt_currency: CurType, start_date: date, end_date: date) -> list[FxPoint]:
+        src_hist = await self.get_hist_fx(currency=src_currency, start_date=start_date, end_date=end_date)
+        tgt_hist = await self.get_hist_fx(currency=tgt_currency, start_date=start_date, end_date=end_date)
+        return [FxPoint(cur_dt=src_hist.cur_dt, rate=tgt_hist.rate / src_hist.rate) for src_hist, tgt_hist in zip(src_hist, tgt_hist)]
     
     async def download_fx_rates(self, cur_dt: date):
         fx_rates = await asyncio.gather(*[CurConverterWrapper.async_pull(cur_dt, cur) for cur in CurType])

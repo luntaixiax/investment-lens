@@ -1,11 +1,12 @@
 import './App.css'
 import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-import AuthProvider from './context/AuthContext';
+import AuthProvider from './hooks/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Landing from './pages/Landing';
 import Register from './pages/Register';
+import Market from './pages/Market';
 
 
 
@@ -23,6 +24,11 @@ function App() {
 				<Route path="/home" element={
 					<ProtectedRoute>
 						<Home />
+					</ProtectedRoute>} 
+				/>
+				<Route path="/market" element={
+					<ProtectedRoute>
+						<Market />
 					</ProtectedRoute>} 
 				/>
 			</Routes>
