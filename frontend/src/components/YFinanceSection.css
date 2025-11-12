@@ -1,0 +1,127 @@
+.yfinance-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+}
+
+.yfinance-search-bar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.yfinance-search-bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    flex-direction: row;
+
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.yfinance-search-bar input {
+    border: none;
+    padding: 0.5rem;
+    background-color: var(--background);
+    width: 100%;
+    outline: none;
+    padding-left: 1.1rem;
+
+    font-size: 1.1rem;
+}
+
+.yfinance-search-bar input:focus {
+    outline: none;
+}
+
+.yfinance-search-bar .search-button {
+    border: none;
+    width: 5rem;
+    border-radius: 1rem 0 0 1rem;
+    
+    background-color: var(--text-secondary);
+    cursor: pointer;
+    color: var(--primary-light);
+}
+
+.yfinance-search-board {
+    width: 100%;
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0 0 10px 10px;
+    border-top: none;
+    margin-top: -1px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.yfinance-search-board-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+}
+
+.yfinance-search-board-item:last-child {
+    border-bottom: none;
+}
+
+.yfinance-search-board-item:hover {
+    background-color: var(--bg-hover, #f5f5f5);
+}
+
+.yfinance-search-board-item-symbol {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.yfinance-search-board-item-name {
+    font-size: 0.875rem;
+    color: var(--text-secondary, #666);
+    margin-top: 0.25rem;
+}
+
+.yfinance-search-board-item-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.yfinance-search-board-item-tags {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.yfinance-search-board-item-prop-type {
+    font-size: 0.75rem;
+    background-color: var(--error-text);
+    color: var(--background);
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+}
+
+.yfinance-search-board-item-exchange {
+    font-size: 0.75rem;
+    background-color: var(--text-secondary);
+    color: var(--background);
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+}

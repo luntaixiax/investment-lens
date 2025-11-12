@@ -1,30 +1,8 @@
 import './CurrencyDropdown.css';
 import { useState, useCallback } from 'react';
 import { useClickOutside } from '../hooks/ClickOutSide';
-
-export type Currency = {
-    symbol: string;
-    id: number;
-    flagClass: string;
-}
-
-export const CURRENCIES: Currency[] = [
-    { symbol: 'USD', id: 1, flagClass: 'fi-us' },
-    { symbol: 'CAD', id: 2, flagClass: 'fi-ca' },
-    { symbol: 'CNY', id: 3, flagClass: 'fi-cn' },
-    { symbol: 'GBP', id: 4, flagClass: 'fi-gb' },
-    { symbol: 'AUD', id: 5, flagClass: 'fi-au' },
-    { symbol: 'JPY', id: 6, flagClass: 'fi-jp' },
-    { symbol: 'EUR', id: 7, flagClass: 'fi-eu' },
-    { symbol: 'MOP', id: 8, flagClass: 'fi-mo' },
-    { symbol: 'HKD', id: 9, flagClass: 'fi-hk' },
-    { symbol: 'CHF', id: 10, flagClass: 'fi-ch' },
-    { symbol: 'TWD', id: 11, flagClass: 'fi-tw' },
-    { symbol: 'THB', id: 12, flagClass: 'fi-th' },
-    { symbol: 'MXN', id: 13, flagClass: 'fi-mx' },
-    { symbol: 'CUP', id: 14, flagClass: 'fi-cu' },
-    { symbol: 'RUB', id: 15, flagClass: 'fi-ru' },
-]
+import { CURRENCIES } from '../utils/enums';
+import type { Currency } from '../utils/models';
 
 
 

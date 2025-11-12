@@ -1,16 +1,27 @@
 import './CurrencySection.css';
 import CurrencyDropdown from './CurrencyDropdown';
-import { CurrencyChart } from './CurrencyChart';
+import { PriceChart } from './PriceChart';
+import { PeriodToolbar } from './PeriodToolbar';
 import { useCurrencyData } from '../hooks/CurrencyData';
+import { usePeriodSelection } from '../hooks/PeriodSelection';
 
 export const CurrencySection = () => {
+
+    // get period selection
+    const { 
+        selectedPeriod,
+        setSelectedPeriod,
+        periods,
+        startDate, 
+        endDate 
+    } = usePeriodSelection('3M');
+
     const { fromCurrency, toCurrency, setFromCurrency, setToCurrency, 
-        fxRates, currentFxRate, selectedPeriod, setSelectedPeriod, periods 
-    } = useCurrencyData();
+        fxRates, currentFxRate 
+    } = useCurrencyData(startDate, endDate);
 
     return (
-        <section className="market-page-container">
-            <h1>Currency Rates</h1>
+        <section className="currency-container">
             <div className="currencies-dropdown-container">
                 <CurrencyDropdown 
                     label="From Currency" 
@@ -37,18 +48,27 @@ export const CurrencySection = () => {
             </div>
 
             <div className="chart-container">
-                <div className="period-toolbar">
-                    {periods.map((period) => (
-                        <button
-                            key={period}
-                            className={`period-button ${selectedPeriod === period ? 'active' : ''}`}
-                            onClick={() => setSelectedPeriod(period)}
-                        >
-                            {period}
-                        </button>
-                    ))}
+
+                <div className="chart-toolbar">
+                    <div className="chart-header-title">
+                        <h3>{fromCurrency.symbol} / {toCurrency.symbol}</h3>
+                        <p>{startDate.toISOString().split('T')[0]} - {endDate.toISOString().split('T')[0]}</p>
+                    </div>
+                    <PeriodToolbar 
+                        periods={periods}
+                        selectedPeriod={selectedPeriod}
+                        onPeriodChange={setSelectedPeriod}
+                    />
                 </div>
-                <CurrencyChart fxRates={fxRates} />
+
+                <PriceChart
+                    data={fxRates}
+                    dateKey="cur_dt"
+                    priceKey="rate"
+                    formatPrice={(value) => value.toFixed(4)}
+                    formatYAxis={(value) => value.toFixed(4)}
+                    gradientId="colorRate"
+                />
             </div>
         </section>
     )
