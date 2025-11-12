@@ -12,6 +12,9 @@ export type PublicPropInfo = {
     prop_type: number;
     industry: string;
     sector: string;
+    country: string;
+    website: string;
+    description: string;
 }
 
 export type YFinancePricePoint = {

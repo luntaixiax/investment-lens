@@ -4,6 +4,12 @@ type PriceDataPoint = {
     [key: string]: string | number;
 };
 
+type TooltipField = {
+    key: string;
+    label: string;
+    formatter?: (value: number) => string;
+};
+
 type PriceChartProps = {
     data: PriceDataPoint[];
     dateKey: string;
@@ -11,6 +17,7 @@ type PriceChartProps = {
     formatPrice?: (value: number) => string;
     formatYAxis?: (value: number) => string;
     gradientId?: string;
+    tooltipFields?: TooltipField[];
 };
 
 export function PriceChart({ 
@@ -19,7 +26,8 @@ export function PriceChart({
     priceKey,
     formatPrice = (value) => value.toFixed(2),
     formatYAxis = (value) => value.toFixed(2),
-    gradientId = 'colorPrice'
+    gradientId = 'colorPrice',
+    tooltipFields = []
 }: PriceChartProps) {
     const domain = data.length > 0 ? (() => {
         const prices = data.map(d => Number(d[priceKey]));
@@ -58,15 +66,43 @@ export function PriceChart({
                             }) || payload[payload.length - 1]; // Fallback to last entry
                             
                             if (linePayload && linePayload.value !== undefined) {
+                                const dataPoint = linePayload.payload as PriceDataPoint;
+                                
                                 return (
                                     <div className="custom-tooltip" style={{
                                         backgroundColor: '#fff',
-                                        padding: '8px',
+                                        padding: '12px',
                                         border: '1px solid #ccc',
-                                        borderRadius: '4px'
+                                        borderRadius: '4px',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                                        minWidth: '200px'
                                     }}>
-                                        <p style={{ margin: 0, marginBottom: '4px', fontWeight: 'bold' }}>{label}</p>
-                                        <p style={{ margin: 0 }}>{formatPrice(Number(linePayload.value))}</p>
+                                        <p style={{ margin: 0, marginBottom: '8px', fontWeight: 'bold', fontSize: '0.9rem' }}>{label}</p>
+                                        <div style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #eee' }}>
+                                            <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                                                <span style={{ color: '#666' }}>Close: </span>
+                                                <span style={{ fontWeight: '600' }}>{formatPrice(Number(linePayload.value))}</span>
+                                            </p>
+                                        </div>
+                                        {tooltipFields.length > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                {tooltipFields.map((field) => {
+                                                    const value = dataPoint[field.key];
+                                                    if (value === undefined || value === null) return null;
+                                                    const formattedValue = field.formatter 
+                                                        ? field.formatter(Number(value))
+                                                        : typeof value === 'number' 
+                                                            ? value.toLocaleString() 
+                                                            : String(value);
+                                                    return (
+                                                        <p key={field.key} style={{ margin: 0, fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span style={{ color: '#666' }}>{field.label}:</span>
+                                                            <span style={{ fontWeight: '500' }}>{formattedValue}</span>
+                                                        </p>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             }
