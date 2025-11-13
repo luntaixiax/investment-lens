@@ -34,7 +34,7 @@ export function usePeriodSelection(defaultPeriod: TimePeriod = '3M') {
     const { startDate, endDate } = useMemo(() => {
         const today = new Date();
         const endDate = new Date(today);
-        endDate.setDate(today.getDate() - 2); // current date - 2 days
+        endDate.setDate(today.getDate() - 1); // current date - 1 days
         const startDate = calculateStartDate(selectedPeriod, endDate);
         return { startDate, endDate };
     }, [selectedPeriod]);

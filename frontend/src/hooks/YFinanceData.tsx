@@ -1,34 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import type { PublicPropInfo } from '../utils/models';
 import type { YFinancePricePoint } from '../utils/models';
-import { useClickOutside } from './ClickOutSide';
 
-export function useYFinanceData(startDate: Date, endDate: Date) {
+export function useYFinanceSearch() {
     // symbol when user is typing in the search bar
     const [symbol, setSymbol] = useState<string>('');
-    // whether the search bar is focused
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-    
     // public property information
     const [publicPropInfo, setPublicPropInfo] = useState<PublicPropInfo | null>(null);
-
-    // only set when user click the search board item
-    const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
-    // historical data for the selected symbol
-    const [histData, setHistData] = useState<YFinancePricePoint[]>([]);
-    // whether the historical data is waiting for the response
-    const [isWaitingHistData, setIsWaitingHistData] = useState<boolean>(false);
-
-    // handle click outside the container
-    const handleClickOutside = useCallback(() => {
-        setIsFocused(false);
-    }, []);
-    
-    // use click outside hook to handle click outside the search board
-    const clickOutsideRef = useClickOutside<HTMLDivElement>(handleClickOutside, isFocused);
-
-    
 
     useEffect(() => {
         async function fetchYFinanceData() {
@@ -48,6 +27,45 @@ export function useYFinanceData(startDate: Date, endDate: Date) {
 
         fetchYFinanceData();
     }, [symbol]);
+
+    return {
+        symbol,
+        setSymbol,
+        publicPropInfo,
+    }
+}
+
+export function useYFinanceData(startDate: Date, endDate: Date) {
+
+    // only set when user click the search board item
+    const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+    // public property information
+    const [publicPropInfo, setPublicPropInfo] = useState<PublicPropInfo | null>(null);
+    // historical data for the selected symbol
+    const [histData, setHistData] = useState<YFinancePricePoint[]>([]);
+    // whether the historical data is waiting for the response
+    const [isWaitingHistData, setIsWaitingHistData] = useState<boolean>(false);
+
+    
+
+    useEffect(() => {
+        async function fetchYFinanceData() {
+            if (selectedSymbol) {
+                const response = await axios.get(`/backend/api/v1/market/yfinance/exists?symbol=${selectedSymbol}`);
+
+                if (response.data) {
+                    // if exists, fetch public property info
+                    const publicInfoResp = await axios.get(`/backend/api/v1/market/yfinance/get_public_prop_info?symbol=${selectedSymbol}`);
+                    const publicInfo = publicInfoResp.data as PublicPropInfo;
+                    setPublicPropInfo(publicInfo);
+                } else {
+                    setPublicPropInfo(null);
+                }
+            }
+        }
+
+        fetchYFinanceData();
+    }, [selectedSymbol]);
 
     // search for historical data when user clicks the search board item
     useEffect(() => {
@@ -73,18 +91,10 @@ export function useYFinanceData(startDate: Date, endDate: Date) {
     }, [selectedSymbol, startDate, endDate]);
 
     return {
-        symbol,
-        setSymbol,
-        isFocused,
-        setIsFocused,
-        publicPropInfo,
-        setPublicPropInfo,
+        selectedPublicPropInfo: publicPropInfo,
         selectedSymbol,
         setSelectedSymbol,
         histData,
-        setHistData,
         isWaitingHistData,
-        setIsWaitingHistData,
-        clickOutsideRef,
     }
 }

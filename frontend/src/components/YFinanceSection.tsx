@@ -1,13 +1,27 @@
 import './YFinanceSection.css';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { PeriodToolbar } from './PeriodToolbar';
 import { PriceChart } from './PriceChart';
-import { useYFinanceData } from '../hooks/YFinanceData';
+import { useYFinanceData, useYFinanceSearch } from '../hooks/YFinanceData';
 import { CURRENCIES, getPropTypeByValue } from '../utils/enums';
 import { usePeriodSelection } from '../hooks/PeriodSelection';
+import { useClickOutside } from '../hooks/ClickOutSide';
+
 
 export function YFinanceSection() {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
+    
+    
+    // whether the search bar is focused
+    const [isFocused, setIsFocused] = useState<boolean>(false);
+
+    // handle click outside the container
+    const handleClickOutside = useCallback(() => {
+        setIsFocused(false);
+    }, []);
+    
+    // use click outside hook to handle click outside the search board
+    const clickOutsideRef = useClickOutside<HTMLDivElement>(handleClickOutside, isFocused);
 
     // get period selection
     const { 
@@ -17,19 +31,21 @@ export function YFinanceSection() {
         startDate, 
         endDate 
     } = usePeriodSelection('3M');
+
+    // get yfinance search hook
+    const {
+        symbol,
+        setSymbol,
+        publicPropInfo,
+    } = useYFinanceSearch();
    
     // get yfinance data hook
     const { 
-        symbol,
-        setSymbol,
-        isFocused,
-        setIsFocused,
-        publicPropInfo,
+        selectedPublicPropInfo,
         selectedSymbol,
         setSelectedSymbol,
         histData,
         isWaitingHistData,
-        clickOutsideRef,
     } = useYFinanceData(startDate, endDate);
 
     
@@ -83,42 +99,42 @@ export function YFinanceSection() {
 
 
             {
-                selectedSymbol === symbol && publicPropInfo && (
+                selectedSymbol && selectedPublicPropInfo && (
                     <section className="yfinance-details-section">
 
                         <div className="yfinance-info-container">
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Name</span>
-                                <span className="yfinance-info-item-value">{publicPropInfo?.name ? publicPropInfo.name : '-'}</span>
+                                <span className="yfinance-info-item-value">{selectedPublicPropInfo?.name ? selectedPublicPropInfo.name : '-'}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Exchange</span>
-                                <span className="yfinance-info-item-value">{publicPropInfo?.exchange ? publicPropInfo.exchange : '-'}</span>
+                                <span className="yfinance-info-item-value">{selectedPublicPropInfo?.exchange ? selectedPublicPropInfo.exchange : '-'}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Currency</span>
-                                <span className="yfinance-info-item-value">{CURRENCIES.find(c => c.id === publicPropInfo.currency)?.symbol}</span>
+                                <span className="yfinance-info-item-value">{CURRENCIES.find(c => c.id === selectedPublicPropInfo.currency)?.symbol}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Prop Type</span>
-                                <span className="yfinance-info-item-value">{getPropTypeByValue(publicPropInfo?.prop_type)}</span>
+                                <span className="yfinance-info-item-value">{getPropTypeByValue(selectedPublicPropInfo?.prop_type)}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Industry</span>
-                                <span className="yfinance-info-item-value">{publicPropInfo?.industry ? publicPropInfo.industry : '-'}</span>    
+                                <span className="yfinance-info-item-value">{selectedPublicPropInfo?.industry ? selectedPublicPropInfo.industry : '-'}</span>    
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Sector</span>
-                                <span className="yfinance-info-item-value">{publicPropInfo?.sector ? publicPropInfo.sector : '-'}</span>
+                                <span className="yfinance-info-item-value">{selectedPublicPropInfo?.sector ? selectedPublicPropInfo.sector : '-'}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Country</span>
-                                <span className="yfinance-info-item-value">{publicPropInfo?.country ? publicPropInfo.country : '-'}</span>
+                                <span className="yfinance-info-item-value">{selectedPublicPropInfo?.country ? selectedPublicPropInfo.country : '-'}</span>
                             </div>
                             <div className="yfinance-info-item">
                                 <span className="yfinance-info-item-label">Website</span>
-                                {publicPropInfo?.website? (
-                                    <a className="yfinance-info-item-value" href={publicPropInfo?.website} target="_blank" rel="noopener noreferrer">
+                                {selectedPublicPropInfo?.website? (
+                                    <a className="yfinance-info-item-value" href={selectedPublicPropInfo?.website} target="_blank" rel="noopener noreferrer">
                                         Click to visit
                                     </a>
                                 ) : (
@@ -127,7 +143,7 @@ export function YFinanceSection() {
                             </div>
                         </div>
 
-                        {publicPropInfo?.description && (
+                        {selectedPublicPropInfo?.description && (
                             <div className="yfinance-info-item yfinance-description-item">
                                 <div 
                                     className="yfinance-description-header"
@@ -139,7 +155,7 @@ export function YFinanceSection() {
                                     </button>
                                 </div>
                                 <div className={`yfinance-description-content ${isDescriptionExpanded ? 'expanded' : 'collapsed'}`}>
-                                    <span className="yfinance-info-item-value">{publicPropInfo.description}</span>
+                                    <span className="yfinance-info-item-value">{selectedPublicPropInfo.description}</span>
                                 </div>
                             </div>
                         )}
