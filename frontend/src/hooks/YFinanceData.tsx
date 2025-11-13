@@ -35,10 +35,9 @@ export function useYFinanceSearch() {
     }
 }
 
-export function useYFinanceData(startDate: Date, endDate: Date) {
+export function useYFinanceData(selectedSymbol: string | null, startDate: Date, endDate: Date) {
 
-    // only set when user click the search board item
-    const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+
     // public property information
     const [publicPropInfo, setPublicPropInfo] = useState<PublicPropInfo | null>(null);
     // historical data for the selected symbol
@@ -92,8 +91,6 @@ export function useYFinanceData(startDate: Date, endDate: Date) {
 
     return {
         selectedPublicPropInfo: publicPropInfo,
-        selectedSymbol,
-        setSelectedSymbol,
         histData,
         isWaitingHistData,
     }
