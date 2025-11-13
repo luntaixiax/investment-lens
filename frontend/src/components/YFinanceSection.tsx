@@ -1,5 +1,5 @@
 import './YFinanceSection.css';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { PeriodToolbar } from './PeriodToolbar';
 import { PriceChart } from './PriceChart';
 import { useYFinanceData, useYFinanceSearch } from '../hooks/YFinanceData';
@@ -10,18 +10,8 @@ import { useClickOutside } from '../hooks/ClickOutSide';
 
 export function YFinanceSection() {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
-    
-    
-    // whether the search bar is focused
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-
-    // handle click outside the container
-    const handleClickOutside = useCallback(() => {
-        setIsFocused(false);
-    }, []);
-    
     // use click outside hook to handle click outside the search board
-    const clickOutsideRef = useClickOutside<HTMLDivElement>(handleClickOutside, isFocused);
+    const { dropdownRef, isOpen, setIsOpen } = useClickOutside<HTMLDivElement>(true);
 
     // get period selection
     const { 
@@ -32,14 +22,14 @@ export function YFinanceSection() {
         endDate 
     } = usePeriodSelection('3M');
 
-    // get yfinance search hook
+    // get yfinance search hook (get public property info)
     const {
         symbol,
         setSymbol,
         publicPropInfo,
     } = useYFinanceSearch();
    
-    // get yfinance data hook
+    // get yfinance data hook (get historical data)
     const { 
         selectedPublicPropInfo,
         selectedSymbol,
@@ -51,21 +41,21 @@ export function YFinanceSection() {
     
     return (
         <section className="yfinance-section">
-            <div className="yfinance-search-bar-container" ref={clickOutsideRef}>
+            <div className="yfinance-search-bar-container" ref={dropdownRef}>
                 <div className="yfinance-search-bar">
                     <input 
                         type="text" 
                         placeholder="Enter a symbol to search" 
                         value={symbol}
                         onChange={(e) => setSymbol(e.target.value)}
-                        onFocus={() => setIsFocused(true)}
+                        onFocus={() => setIsOpen(true)}
                     />
                     <button className="search-button">
                         <i className="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
 
-                {isFocused && (
+                {isOpen && (
                     publicPropInfo ? (
                         <div 
                             className="yfinance-search-board"

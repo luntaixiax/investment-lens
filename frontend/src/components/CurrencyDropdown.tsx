@@ -1,10 +1,7 @@
 import './CurrencyDropdown.css';
-import { useState, useCallback } from 'react';
 import { useClickOutside } from '../hooks/ClickOutSide';
 import { CURRENCIES } from '../utils/enums';
 import type { Currency } from '../utils/models';
-
-
 
 type props = {
     label: string;
@@ -13,9 +10,7 @@ type props = {
 }
 
 export default function CurrencyDropdown({ label, selected, onSelect }: props) {
-    const [isOpen, setIsOpen] = useState(false);
-    const closeDropdown = useCallback(() => setIsOpen(false), []);
-    const dropdownRef = useClickOutside<HTMLDivElement>(closeDropdown);
+    const { dropdownRef, isOpen, setIsOpen } = useClickOutside<HTMLDivElement>(true);
 
     const handleSelect = (currency: Currency) => {
         onSelect(currency);
