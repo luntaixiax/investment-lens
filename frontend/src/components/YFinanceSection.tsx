@@ -6,7 +6,7 @@ import { useYFinanceData, useYFinanceSearch } from '../hooks/YFinanceData';
 import { CURRENCIES, getPropTypeByValue } from '../utils/enums';
 import { usePeriodSelection } from '../hooks/PeriodSelection';
 import { useClickOutside } from '../hooks/ClickOutSide';
-import type { YFinancePricePoint, PublicPropInfo } from '../utils/models';
+import type { PublicPropInfo } from '../utils/models';
 
 
 function YFinanceSearchBar({ onSelectSymbol }: { onSelectSymbol: (symbol: string) => void }) {

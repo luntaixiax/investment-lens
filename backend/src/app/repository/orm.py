@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, 
 from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceType
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from datetime import date
-from src.app.model.enums import CurType
+from src.app.model.enums import CurType, PropertyType
 
 
 
@@ -47,8 +47,19 @@ class UserORM(SQLModelWithSort, table=True):
             primary_key = True, 
             nullable = False)
     )
-    username: str = Field(sa_column=Column(String(length = 20),  nullable = False, unique = True))
-    hashed_password: str = Field(sa_column=Column(String(length = 72),  nullable = False))
+    username: str = Field(
+        sa_column=Column(
+            String(length = 20),  
+            nullable = False, 
+            unique = True
+        )
+    )
+    hashed_password: str = Field(
+        sa_column=Column(
+            String(length = 72),  
+            nullable = False
+        )
+    )
     is_admin: bool = Field(
         sa_column=Column(
             Boolean(create_constraint=True), 
@@ -69,8 +80,94 @@ class FxORM(SQLModelWithSort, table=True):
         )
     )
     cur_dt: date = Field(
-        sa_column=Column(Date(), primary_key = True, nullable = False)
+        sa_column=Column(
+            Date(), 
+            primary_key = True, 
+            nullable = False
+        )
     )
     rate: float = Field(
-        sa_column=Column(DECIMAL(15, 5, asdecimal=False), nullable = False)
+        sa_column=Column(
+            DECIMAL(15, 5, asdecimal=False), 
+            nullable = False
+        )
+    )
+    
+class PropertyORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "property"
+    
+    prop_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    symbol: str = Field(
+        sa_column=Column(
+            String(length = 35), 
+            primary_key = False, 
+            nullable = True,
+            unique = True, # TODO: only for public properties
+        )
+    )
+    name: str = Field(
+        sa_column=Column(
+            String(length = 100),
+            nullable = False
+        )
+    )
+    currency: CurType = Field(
+        sa_column=Column(
+            ChoiceType(CurType, impl = Integer()), 
+            nullable = False
+        )
+    )
+    prop_type: PropertyType = Field(
+        sa_column=Column(
+            ChoiceType(PropertyType, impl = Integer()), 
+            nullable = False
+        )
+    )
+    is_public: bool = Field(
+        sa_column=Column(
+            Boolean(create_constraint=True), 
+            default = True, 
+            nullable = False
+        )
+    )
+    
+class PrivatePropOwnershipORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "private_prop_ownership"
+    
+    ownership_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    prop_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            ForeignKey(
+                'property.prop_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False,
+        )
+    )
+    user_id: str = Field(
+        sa_column=Column(
+            String(length = 15), 
+            ForeignKey(
+                'users.user_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
     )
