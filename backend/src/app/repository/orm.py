@@ -137,6 +137,12 @@ class PropertyORM(SQLModelWithSort, table=True):
             nullable = False
         )
     )
+    description: str | None = Field(
+        sa_column=Column(
+            Text(),
+            nullable = True
+        )
+    )
     
 class PrivatePropOwnershipORM(SQLModelWithSort, table=True):
     __collection__: str = 'primary'
@@ -158,6 +164,7 @@ class PrivatePropOwnershipORM(SQLModelWithSort, table=True):
                 ondelete = 'RESTRICT'
             ),
             nullable = False,
+            unique = True,
         )
     )
     user_id: str = Field(

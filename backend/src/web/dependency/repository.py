@@ -6,6 +6,8 @@ from fastapi import Depends
 from src.app.repository.user import UserRepository
 from src.app.utils.secrets import get_async_db_url, get_sync_db_url
 from src.app.repository.market import FxRepository
+from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
+
 # Global state for caching engine and sessionmaker
 _async_engine: AsyncEngine | None = None
 _async_session_maker: sessionmaker[AsyncSession] | None = None
@@ -83,6 +85,16 @@ async def get_fx_repository(
     async_session: AsyncSession = Depends(get_async_session)
 ) -> FxRepository:
     return FxRepository(db_session=async_session)
+
+async def get_property_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> PropertyRepository:
+    return PropertyRepository(db_session=async_session)
+
+async def get_private_prop_ownership_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> PrivatePropOwnershipRepository:
+    return PrivatePropOwnershipRepository(db_session=async_session)
         
         
 if __name__ == "__main__":

@@ -56,6 +56,9 @@ class Property(BaseModel):
         default=True,
         description='Whether the property is public to all users or only the owner, e.g., real estate, etc.',
     )
+    description: str | None = Field(
+        description='The description of the property.',
+    )
     
     @model_validator(mode='after')
     def check_is_public(self) -> 'Property':

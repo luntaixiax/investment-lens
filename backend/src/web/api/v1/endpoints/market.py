@@ -85,3 +85,12 @@ async def yfinance_get_hist_data(
     yfinance_service: YFinanceService = Depends(get_yfinance_service)
 ) -> list[YFinancePricePoint]:
     return await yfinance_service.get_hist_data(symbol, start_date, end_date)
+
+@router.post("/yfinance/register")
+async def yfinance_register(
+    symbol: str,
+    yfinance_service: YFinanceService = Depends(get_yfinance_service),
+    admin_user: User = Depends(get_admin_user)
+) -> None:
+    # only admin can register
+    await yfinance_service.register(symbol)

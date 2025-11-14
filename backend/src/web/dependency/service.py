@@ -6,6 +6,9 @@ from src.app.repository.market import FxRepository
 from src.app.service.market import FxService
 from src.web.dependency.repository import get_fx_repository
 from src.app.service.market import YFinanceService
+from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
+from src.app.service.registry import RegistryService
+from src.web.dependency.repository import get_property_repository, get_private_prop_ownership_repository
 
 async def get_user_service(
     user_repository: UserRepository = Depends(get_user_repository)
@@ -17,5 +20,16 @@ async def get_fx_service(
 ) -> FxService:
     return FxService(fx_repository=fx_repository)
 
-async def get_yfinance_service() -> YFinanceService:
-    return YFinanceService()
+async def get_registry_service(
+    property_repository: PropertyRepository = Depends(get_property_repository),
+    private_prop_ownership_repository: PrivatePropOwnershipRepository = Depends(get_private_prop_ownership_repository)
+) -> RegistryService:
+    return RegistryService(
+        property_repository=property_repository, 
+        private_prop_ownership_repository=private_prop_ownership_repository
+    )
+
+async def get_yfinance_service(
+    registry_service: RegistryService = Depends(get_registry_service)
+) -> YFinanceService:
+    return YFinanceService(registry_service=registry_service)

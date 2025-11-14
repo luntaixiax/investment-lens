@@ -5,11 +5,13 @@ from datetime import date, timedelta
 from yokedcache import cached
 import pandas as pd
 from src.app.model.market import PublicPropInfo
+from src.app.model.registry import Property
 from src.app.model.enums import CurType, PropertyType
 from src.app.model.market import FxRate, FxPoint, YFinancePricePoint
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
 from src.app.repository.cache import cache
+from src.app.service.registry import RegistryService
 
 
 class YFinanceWrapper:
@@ -102,6 +104,9 @@ class YFinanceWrapper:
 
 class YFinanceService:
     
+    def __init__(self, registry_service: RegistryService):
+        self.registry_service = registry_service
+        
     @cached(
         cache=cache, 
         key_builder=lambda self, symbol: f"yfinance_exists_{symbol}", 
@@ -115,8 +120,15 @@ class YFinanceService:
         key_builder=lambda self, symbol: f"yfinance_public_prop_info_{symbol}", 
         ttl=int(timedelta(hours=24).total_seconds())
     )
-    async def get_public_prop_info(self, symbol: str) -> PublicPropInfo:
+    async def _get_public_prop_info_cached(self, symbol: str):
         return await asyncio.to_thread(YFinanceWrapper(symbol).get_public_prop_info)
+    
+    async def get_public_prop_info(self, symbol: str) -> PublicPropInfo:
+        result = await self._get_public_prop_info_cached(symbol)
+        # If result comes from cache, it may be a dict instead of PublicPropInfo
+        if isinstance(result, dict):
+            return PublicPropInfo.model_validate(result)
+        return result
     
     async def get_hist_data(self, symbol: str, start_date: date, end_date: date) -> list[YFinancePricePoint]:
         df = await asyncio.to_thread(YFinanceWrapper(symbol).get_hist_data, start_date, end_date)
@@ -131,6 +143,22 @@ class YFinanceService:
                 split_factor=rows.split_factor
             ) for dt, rows in df.iterrows()
         ] if not df.empty else []
+        
+    async def register(self, symbol: str):
+        if not await self.exists(symbol):
+            raise NotExistError(f"Symbol {symbol} does not exist")
+        public_prop_info = await self.get_public_prop_info(symbol)
+        
+        property = Property(
+            symbol=public_prop_info.symbol,
+            name=public_prop_info.name,
+            currency=public_prop_info.currency,
+            prop_type=public_prop_info.prop_type,
+            is_public=True,
+            description=public_prop_info.description
+        )
+        await self.registry_service.register_public_property(property)
+        
 
 FALL_BACK_CUR = {
     CurType.MOP : CurType.HKD
