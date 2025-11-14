@@ -154,6 +154,15 @@ class PrivatePropOwnershipRepository:
             await self.db_session.rollback()
             raise FKNoDeleteUpdateError(details=str(e))
         
+    async def remove_by_prop_id(self, prop_id: str):
+        sql = delete(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.prop_id == prop_id)
+        try:
+            await self.db_session.execute(sql)
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            raise FKNoDeleteUpdateError(details=str(e))
+        
     async def update(self, private_prop_ownership: PrivatePropOwnership):
         private_prop_ownership_orm = self.toPrivatePropOwnershipORM(private_prop_ownership)
         sql = select(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.ownership_id == private_prop_ownership.ownership_id)
@@ -173,6 +182,15 @@ class PrivatePropOwnershipRepository:
         
     async def get(self, ownership_id: str) -> PrivatePropOwnership:
         sql = select(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.ownership_id == ownership_id)
+        try:
+            result = await self.db_session.execute(sql)
+            p = result.scalars().one()
+        except NoResultFound as e:
+            raise NotExistError(details=str(e))
+        return self.fromPrivatePropOwnershipORM(p)
+    
+    async def get_by_prop_id(self, prop_id: str) -> PrivatePropOwnership:
+        sql = select(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.prop_id == prop_id)
         try:
             result = await self.db_session.execute(sql)
             p = result.scalars().one()

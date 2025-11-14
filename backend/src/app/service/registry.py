@@ -67,6 +67,20 @@ class RegistryService:
         # make sure the property is private and exists
         property = await self.get_private_property(prop_id, user_id)
         try:
+            # first remove ownership
+            try:
+                await self.private_prop_ownership_repository.remove_by_prop_id(prop_id)
+            except NotExistError as e:
+                raise NotExistError(
+                    f"Property {prop_id} is not owned by user {user_id}",
+                    details="N/A" # don't pass database info
+                )
+            except FKNoDeleteUpdateError as e:
+                raise FKNoDeleteUpdateError(
+                    f"Ownership of property {prop_id} is associated with other data, cannot delete",
+                    details=e.details
+                )
+            # then remove property
             await self.property_repository.remove(prop_id)
         except NotExistError as e:
             raise NotExistError(
@@ -164,7 +178,15 @@ class RegistryService:
             if property.is_public:
                 raise OpNotPermittedError(f"Property {prop_id} is public")
             else:
-                if property.user_id == user_id:
+                try:
+                    ownership = await self.private_prop_ownership_repository.get_by_prop_id(prop_id)
+                except NotExistError as e:
+                    raise NotExistError(
+                        f"Property {prop_id} is not owned by user {user_id}",
+                        details="N/A" # don't pass database info
+                    )
+                    
+                if ownership.user_id == user_id:
                     return property
                 else:
                     raise OpNotPermittedError(f"Property {prop_id} is not owned by user {user_id}")
