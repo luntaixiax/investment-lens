@@ -11,14 +11,14 @@ router = APIRouter(
     tags=["registry"],
 )
 
-@router.get("/registry/get_public_property")
+@router.get("/get_public_property")
 async def get_public_property(
     property_id: str,
     registry_service: RegistryService = Depends(get_registry_service)
 ) -> Property:
     return await registry_service.get_public_property(property_id)
 
-@router.get("/registry/get_private_property")
+@router.get("/get_private_property")
 async def get_private_property(
     property_id: str,
     current_user: User = Depends(get_current_user),
@@ -29,7 +29,7 @@ async def get_private_property(
         current_user.user_id
     )
     
-@router.get("/registry/list_private_properties")
+@router.get("/list_private_properties")
 async def list_private_properties(
     current_user: User = Depends(get_current_user),
     registry_service: RegistryService = Depends(get_registry_service)
@@ -38,7 +38,7 @@ async def list_private_properties(
         current_user.user_id
     )
     
-@router.get("/registry/blurry_search_public")
+@router.get("/blurry_search_public")
 async def blurry_search_public(
     keyword: str,
     limit: int = 10,
@@ -49,7 +49,7 @@ async def blurry_search_public(
         limit
     )
     
-@router.get("/registry/blurry_search_yfinance")
+@router.get("/blurry_search_yfinance")
 async def blurry_search_yfinance(
     keyword: str,
     limit: int = 10,
@@ -60,7 +60,7 @@ async def blurry_search_yfinance(
         limit
     )
     
-@router.post("/registry/register_public_property")
+@router.post("/register_public_property")
 async def register_public_property(
     property: Property,
     admin_user: User = Depends(get_admin_user),
@@ -70,7 +70,7 @@ async def register_public_property(
         property,
     )
     
-@router.post("/registry/register_private_property")
+@router.post("/register_private_property")
 async def register_private_property(
     property: Property,
     current_user: User = Depends(get_current_user),
@@ -81,7 +81,7 @@ async def register_private_property(
         current_user.user_id
     )
     
-@router.post("/registry/delist_public_property")
+@router.post("/delist_public_property")
 async def delist_public_property(
     property_id: str,
     admin_user: User = Depends(get_admin_user),
@@ -91,7 +91,7 @@ async def delist_public_property(
         property_id
     )
     
-@router.post("/registry/delist_private_property")
+@router.post("/delist_private_property")
 async def delist_private_property(
     property_id: str,
     current_user: User = Depends(get_current_user),
@@ -102,7 +102,7 @@ async def delist_private_property(
         current_user.user_id
     )
     
-@router.post("/registry/update_public_property")
+@router.post("/update_public_property")
 async def update_public_property(
     property: Property,
     admin_user: User = Depends(get_admin_user),
@@ -112,7 +112,7 @@ async def update_public_property(
         property
     )
     
-@router.post("/registry/update_private_property")
+@router.post("/update_private_property")
 async def update_private_property(
     property: Property,
     current_user: User = Depends(get_current_user),
@@ -123,7 +123,7 @@ async def update_private_property(
         current_user.user_id
     )
     
-@router.post("/registry/register_yfinance_property")
+@router.post("/register_yfinance_property")
 async def register_yfinance_property(
     symbol: str,
     registry_service: RegistryService = Depends(get_registry_service),
@@ -133,7 +133,7 @@ async def register_yfinance_property(
         symbol
     )
     
-@router.post("/registry/register_yfinance_properties")
+@router.post("/register_yfinance_properties")
 async def register_yfinance_properties(
     symbols: list[str],
     registry_service: RegistryService = Depends(get_registry_service),

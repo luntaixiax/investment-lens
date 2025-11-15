@@ -3,35 +3,25 @@ import axios from 'axios';
 import type { PublicPropInfo } from '../utils/models';
 import type { YFinancePricePoint } from '../utils/models';
 
-export function useYFinanceSearch() {
-    // symbol when user is typing in the search bar
-    const [symbol, setSymbol] = useState<string>('');
+export function useYFinanceSearch(searchSymbol: string) {
+
     // public property information
-    const [publicPropInfo, setPublicPropInfo] = useState<PublicPropInfo | null>(null);
+    const [publicPropInfos, setPublicPropInfos] = useState<PublicPropInfo[]>([]);
 
     useEffect(() => {
         async function fetchYFinanceData() {
-            if (symbol.length > 0) {
-                const response = await axios.get(`/backend/api/v1/market/yfinance/exists?symbol=${symbol}`);
-
-                if (response.data) {
-                    // if exists, fetch public property info
-                    const publicInfoResp = await axios.get(`/backend/api/v1/market/yfinance/get_public_prop_info?symbol=${symbol}`);
-                    const publicInfo = publicInfoResp.data as PublicPropInfo;
-                    setPublicPropInfo(publicInfo);
-                } else {
-                    setPublicPropInfo(null);
-                }
+            if (searchSymbol.length > 0) {
+                const response = await axios.get(`/backend/api/v1/registry/blurry_search_yfinance?keyword=${searchSymbol}`);
+                const publicInfos = response.data as PublicPropInfo[];
+                setPublicPropInfos(publicInfos);
             }
         }
 
         fetchYFinanceData();
-    }, [symbol]);
+    }, [searchSymbol]);
 
     return {
-        symbol,
-        setSymbol,
-        publicPropInfo,
+        publicPropInfos,
     }
 }
 

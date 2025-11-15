@@ -12,7 +12,7 @@
     justify-content: center;
     gap: 0.1rem;
     width: 100%;
-    max-width: 500px;
+    max-width: 700px;
     margin: 0 auto;
 }
 
@@ -23,7 +23,7 @@
     flex-direction: row;
 
     width: 100%;
-    max-width: 500px;
+
     margin: 0 auto;
 
     border-radius: 10px;
@@ -71,9 +71,9 @@
 .yfinance-search-board-item {
     display: flex;
     flex-direction: column;
-    padding: 0.75rem 1rem;
+    padding: 0.25rem 1rem;
     cursor: pointer;
-    border-bottom: 1px solid var(--border);
+
 }
 
 .yfinance-search-board-item:last-child {
@@ -94,6 +94,7 @@
     font-size: 0.875rem;
     color: var(--text-secondary, #666);
     margin-top: 0.25rem;
+    text-wrap: wrap;
 }
 
 .yfinance-search-board-item-header {
@@ -108,6 +109,15 @@
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
+    width: 200px; /* Fixed width for all tags containers */
+}
+
+.yfinance-search-board-item-tags > span {
+    flex: 1; /* Each span takes equal proportional space */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .yfinance-search-board-item-prop-type {

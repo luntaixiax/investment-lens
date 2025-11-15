@@ -10,14 +10,13 @@ import type { PublicPropInfo } from '../utils/models';
 
 
 function YFinanceSearchBar({ onSelectSymbol }: { onSelectSymbol: (symbol: string) => void }) {
+    // symbol when user is typing in the search bar
+    const [searchSymbol, setSearchSymbol] = useState<string>('');
+
     // use click outside hook to handle click outside the search board
     const { dropdownRef, isOpen, setIsOpen } = useClickOutside<HTMLDivElement>(true);
     // get yfinance search hook (get public property info)
-    const {
-        symbol,
-        setSymbol,
-        publicPropInfo,
-    } = useYFinanceSearch();
+    const { publicPropInfos } = useYFinanceSearch(searchSymbol);
 
     return (
         <div className="yfinance-search-bar-container" ref={dropdownRef}>
@@ -25,8 +24,8 @@ function YFinanceSearchBar({ onSelectSymbol }: { onSelectSymbol: (symbol: string
                 <input
                     type="text"
                     placeholder="Enter a symbol to search"
-                    value={symbol}
-                    onChange={(e) => setSymbol(e.target.value)}
+                    value={searchSymbol}
+                    onChange={(e) => setSearchSymbol(e.target.value)}
                     onFocus={() => setIsOpen(true)}
                 />
                 <button className="search-button">
@@ -35,23 +34,31 @@ function YFinanceSearchBar({ onSelectSymbol }: { onSelectSymbol: (symbol: string
             </div>
 
             {isOpen && (
-                publicPropInfo ? (
+                publicPropInfos.length > 0 ? (
                     <div
                         className="yfinance-search-board"
                         onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => onSelectSymbol(publicPropInfo.symbol)}
                     >
-                        <div className="yfinance-search-board-item">
-                            <div className="yfinance-search-board-item-header">
-                                <span className="yfinance-search-board-item-symbol">{publicPropInfo.symbol}</span>
-                                <div className="yfinance-search-board-item-tags">
-                                    <span className={`fi ${CURRENCIES.find(c => c.id === publicPropInfo.currency)?.flagClass}`}></span>
-                                    <span className="yfinance-search-board-item-prop-type">{getPropTypeByValue(publicPropInfo.prop_type)}</span>
-                                    <span className="yfinance-search-board-item-exchange">{publicPropInfo.exchange}</span>
+                        {publicPropInfos.map((publicPropInfo) => (
+                            <div 
+                                className="yfinance-search-board-item" 
+                                key={publicPropInfo.symbol}
+                                onClick={() => onSelectSymbol(publicPropInfo.symbol)}
+                            >
+                                <div className="yfinance-search-board-item">
+                                    <div className="yfinance-search-board-item-header">
+                                        <span className="yfinance-search-board-item-symbol">{publicPropInfo.symbol}</span>
+                                        <div className="yfinance-search-board-item-tags">
+                                            <span className={`fi ${CURRENCIES.find(c => c.id === publicPropInfo.currency)?.flagClass}`}></span>
+                                            <span className="yfinance-search-board-item-prop-type">{getPropTypeByValue(publicPropInfo.prop_type)}</span>
+                                            <span className="yfinance-search-board-item-exchange">{publicPropInfo.exchange}</span>
+                                        </div>
+                                    </div>
+                                    <span className="yfinance-search-board-item-name">{publicPropInfo.name}</span>
                                 </div>
                             </div>
-                            <span className="yfinance-search-board-item-name">{publicPropInfo.name}</span>
-                        </div>
+                        ))
+                        }
                     </div>
                 ) : (
                     <div
