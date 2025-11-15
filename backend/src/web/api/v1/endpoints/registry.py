@@ -4,6 +4,7 @@ from src.app.service.registry import RegistryService
 from src.web.dependency.service import get_registry_service
 from src.web.dependency.auth import get_current_user, get_admin_user
 from src.app.model.user import User
+from src.app.model.market import PublicPropInfo
 
 router = APIRouter(
     prefix="/registry",
@@ -44,6 +45,17 @@ async def blurry_search_public(
     registry_service: RegistryService = Depends(get_registry_service)
 ) -> list[Property]:
     return await registry_service.blurry_search_public(
+        keyword,
+        limit
+    )
+    
+@router.get("/registry/blurry_search_yfinance")
+async def blurry_search_yfinance(
+    keyword: str,
+    limit: int = 10,
+    registry_service: RegistryService = Depends(get_registry_service)
+) -> list[PublicPropInfo]:
+    return await registry_service.blurry_search_yfinance(
         keyword,
         limit
     )
@@ -109,4 +121,24 @@ async def update_private_property(
     await registry_service.update_private_property(
         property,
         current_user.user_id
+    )
+    
+@router.post("/registry/register_yfinance_property")
+async def register_yfinance_property(
+    symbol: str,
+    registry_service: RegistryService = Depends(get_registry_service),
+    admin_user: User = Depends(get_admin_user)
+) -> None:
+    await registry_service.register_yfinance_property(
+        symbol
+    )
+    
+@router.post("/registry/register_yfinance_properties")
+async def register_yfinance_properties(
+    symbols: list[str],
+    registry_service: RegistryService = Depends(get_registry_service),
+    admin_user: User = Depends(get_admin_user)
+) -> None:
+    await registry_service.register_yfinance_properties(
+        symbols
     )

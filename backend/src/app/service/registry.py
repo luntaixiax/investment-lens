@@ -1,16 +1,21 @@
+import asyncio
+from src.app.service.market import YFinanceService
 from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
 from src.app.model.registry import Property, PrivatePropOwnership
 from src.app.model.exceptions import AlreadyExistError, NotExistError, OpNotPermittedError, \
     FKNoDeleteUpdateError, PermissionDeniedError
+from src.app.model.market import PublicPropInfo
 
 class RegistryService:
     
     def __init__(self, 
             property_repository: PropertyRepository, 
-            private_prop_ownership_repository: PrivatePropOwnershipRepository
+            private_prop_ownership_repository: PrivatePropOwnershipRepository,
+            yfinance_service: YFinanceService
         ):
         self.property_repository = property_repository
         self.private_prop_ownership_repository = private_prop_ownership_repository
+        self.yfinance_service = yfinance_service
         
     async def register_public_property(self, property: Property):
         if property.is_public:
@@ -38,6 +43,33 @@ class RegistryService:
                 f"Some properties already exist",
                 details="N/A" # don't pass database info
             )
+            
+    async def register_yfinance_property(self, symbol: str):
+        if not await self.yfinance_service.exists(symbol):
+            raise NotExistError(f"Symbol {symbol} does not exist")
+        
+        public_prop_info = await self.yfinance_service.get_public_prop_info(symbol)
+        property = self.to_property(public_prop_info)
+        try:
+            await self.register_public_property(property)
+        except AlreadyExistError as e:
+            pass # allow exist
+            
+        
+    async def register_yfinance_properties(self, symbols: list[str]):
+        # Parallelize API calls (exists and get_public_prop_info) for better performance
+        # Then batch insert all properties in a single transaction
+        infos = await asyncio.gather(
+            *[self.yfinance_service.get_public_prop_info(symbol) for symbol in symbols]
+        )
+        properties = [
+            self.to_property(info) for info in infos
+        ]
+        try:
+            await self.register_public_properties(properties)
+        except AlreadyExistError as e:
+            pass # allow exist
+    
         
     async def register_private_property(self, property: Property, user_id: str):
         if not property.is_public:
@@ -212,5 +244,22 @@ class RegistryService:
         properties = await self.property_repository.gets(prop_ids)
         return properties
     
+    def to_property(self, info: PublicPropInfo) -> Property:
+        return Property(
+            symbol=info.symbol,
+            name=info.name or info.symbol,
+            currency=info.currency,
+            prop_type=info.prop_type,
+            is_public=True,
+            description=info.description
+        )
+    
     async def blurry_search_public(self, keyword: str, limit: int = 10) -> list[Property]:
         return await self.property_repository.blurry_search_public(keyword, limit)
+    
+    async def blurry_search_yfinance(self, keyword: str, limit: int = 10) -> list[PublicPropInfo]:
+        properties = await self.blurry_search_public(keyword, limit)
+        infos = await asyncio.gather(
+            *[self.yfinance_service.get_public_prop_info(property.symbol) for property in properties]
+        )
+        return infos

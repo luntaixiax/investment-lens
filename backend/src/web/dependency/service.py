@@ -20,16 +20,16 @@ async def get_fx_service(
 ) -> FxService:
     return FxService(fx_repository=fx_repository)
 
+async def get_yfinance_service() -> YFinanceService:
+    return YFinanceService()
+
 async def get_registry_service(
     property_repository: PropertyRepository = Depends(get_property_repository),
-    private_prop_ownership_repository: PrivatePropOwnershipRepository = Depends(get_private_prop_ownership_repository)
+    private_prop_ownership_repository: PrivatePropOwnershipRepository = Depends(get_private_prop_ownership_repository),
+    yfinance_service: YFinanceService = Depends(get_yfinance_service)
 ) -> RegistryService:
     return RegistryService(
         property_repository=property_repository, 
-        private_prop_ownership_repository=private_prop_ownership_repository
+        private_prop_ownership_repository=private_prop_ownership_repository,
+        yfinance_service=yfinance_service
     )
-
-async def get_yfinance_service(
-    registry_service: RegistryService = Depends(get_registry_service)
-) -> YFinanceService:
-    return YFinanceService(registry_service=registry_service)
