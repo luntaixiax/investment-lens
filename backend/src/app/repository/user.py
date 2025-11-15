@@ -28,7 +28,8 @@ class UserRepository:
             user_id = user.user_id,
             username = user.username,
             hashed_password = user.hashed_password, # type: ignore
-            is_admin = user.is_admin
+            is_admin = user.is_admin,
+            email = user.email
         )
         
     def toUser(self, user_orm: UserORM) -> User:
@@ -43,7 +44,8 @@ class UserRepository:
         return User(
             user_id = user_orm.user_id,
             username = user_orm.username,
-            is_admin = user_orm.is_admin
+            is_admin = user_orm.is_admin,
+            email = user_orm.email
         )
         
     async def add(self, user: UserCreate):
@@ -108,6 +110,7 @@ class UserRepository:
             p.username = user_orm.username
             p.hashed_password = user_orm.hashed_password # type: ignore
             p.is_admin = user_orm.is_admin
+            p.email = user_orm.email
             
             self.db_session.add(p)
             await self.db_session.commit()

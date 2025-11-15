@@ -2,7 +2,6 @@ import './LoginForm.css';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
 import { useAuth } from '../hooks/AuthContext';
 
 type LoginData = {

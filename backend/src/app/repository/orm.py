@@ -55,6 +55,13 @@ class UserORM(SQLModelWithSort, table=True):
             unique = True
         )
     )
+    email: str = Field(
+        sa_column=Column(
+            EmailType(),  
+            nullable = False, 
+            unique = False
+        )
+    )
     hashed_password: str = Field(
         sa_column=Column(
             String(length = 72),  

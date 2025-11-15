@@ -19,6 +19,7 @@ class User(EnhancedBaseModel):
         frozen=True,
     )
     username: str = Field(max_length=20)
+    email: str = Field(max_length=100)
     is_admin: bool = Field(default=False)
     
 class UserInternalRead(User):
@@ -49,4 +50,5 @@ class UserCreate(User):
     
 class UserRegister(EnhancedBaseModel):
     username: str = Field(max_length=20)
+    email: str = Field(max_length=100)
     password: str = Field(min_length=8, max_length=20)

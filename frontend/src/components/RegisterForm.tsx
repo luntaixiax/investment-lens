@@ -2,6 +2,7 @@ import axios from 'axios';
 import './RegisterForm.css';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 
 type RegisterData = {
 	username: string;
@@ -16,6 +17,7 @@ type Message = {
 
 export default function RegisterForm() {
 
+	const navigate = useNavigate();
 	const [messageOnRegister, setMessageOnRegister] = useState<Message>({ message: '', success: false });
 	const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterData>();
 
@@ -28,6 +30,10 @@ export default function RegisterForm() {
 				message: `Welcome, ${data.username}!`,
 				success: true
 			});
+
+			setTimeout(() => {
+                navigate("/login"); // redirect to login page
+            }, 1000); // wait 1 second before redirecting
 		} catch (error: any) {
 			if (axios.isAxiosError(error)) {
 				if (error.response?.status === 520) {

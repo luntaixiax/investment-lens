@@ -19,6 +19,7 @@ async def create_admin_user(
     user_ = UserCreate(
         username=user.username,
         is_admin=True,
+        email=user.email,
         password=user.password
     )
     await user_service.create_user(user_)
@@ -33,6 +34,7 @@ async def register(
     user_ = UserCreate(
         username=user.username,
         is_admin=False,
+        email=user.email,
         password=user.password
     )
     await user_service.create_user(user_)

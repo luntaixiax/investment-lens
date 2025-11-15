@@ -28,7 +28,8 @@ def decode_token(token: str, secret_key: str, algorithm: str="HS256") -> User:
     user = User(
         user_id=payload.get('user_id'), # type: ignore
         username=payload.get('username'), # type: ignore
-        is_admin=payload.get('is_admin') # type: ignore
+        is_admin=payload.get('is_admin'), # type: ignore
+        email=payload.get('email'), # type: ignore
     )
     return user
 
@@ -73,7 +74,8 @@ class AuthService:
             user=User(
                 user_id=internal_user.user_id,
                 username=username,
-                is_admin=internal_user.is_admin
+                is_admin=internal_user.is_admin,
+                email=internal_user.email
             ),
             secret_key=auth_config['secret_key'],
             algorithm=auth_config['algorithm'],
