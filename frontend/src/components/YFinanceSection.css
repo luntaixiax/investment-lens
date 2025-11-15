@@ -14,6 +14,7 @@
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
+    position: relative; /* Enable absolute positioning for dropdown */
 }
 
 .yfinance-search-bar {
@@ -57,6 +58,12 @@
 }
 
 .yfinance-search-board {
+    position: absolute;
+    top: 120%; /* Position directly below the search bar */
+    left: 0;
+    right: 0;
+    z-index: 1000; /* Ensure it appears on top of other content */
+    
     width: 100%;
     background-color: var(--background);
     border: 1px solid var(--border);
@@ -66,6 +73,7 @@
     max-height: 300px;
     overflow-y: auto;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
 }
 
 .yfinance-search-board-item {
@@ -73,7 +81,6 @@
     flex-direction: column;
     padding: 0.25rem 1rem;
     cursor: pointer;
-
 }
 
 .yfinance-search-board-item:last-child {
