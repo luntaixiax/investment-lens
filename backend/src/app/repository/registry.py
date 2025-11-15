@@ -24,7 +24,8 @@ class PropertyRepository:
             currency=property.currency,
             prop_type=property.prop_type,
             is_public=property.is_public,
-            description=property.description
+            description=property.description,
+            custom_props=property.custom_props
         )
         
     def fromPropertyORM(self, property_orm: PropertyORM) -> Property:
@@ -35,7 +36,8 @@ class PropertyRepository:
             currency=property_orm.currency,
             prop_type=property_orm.prop_type,
             is_public=property_orm.is_public,
-            description=property_orm.description
+            description=property_orm.description,
+            custom_props=property_orm.custom_props
         )
         
     async def add(self, property: Property):
@@ -83,6 +85,7 @@ class PropertyRepository:
             p.prop_type = property.prop_type
             p.is_public = property.is_public
             p.description = property.description
+            p.custom_props = property.custom_props
             
             self.db_session.add(p)
             await self.db_session.commit()

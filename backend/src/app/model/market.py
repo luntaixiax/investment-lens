@@ -2,6 +2,7 @@ from typing import Any, Literal
 from datetime import date
 from pydantic import BaseModel, ConfigDict, Field, model_validator, computed_field
 from src.app.model.enums import CurType, PropertyType
+from src.app.model.registry import Property
 
 class FxPoint(BaseModel):
     cur_dt: date = Field(
@@ -55,6 +56,38 @@ class PublicPropInfo(BaseModel):
     description: str | None = Field(
         description='The summary of the property.',
     )
+    
+    def to_property(self) -> Property:
+        return Property(
+            symbol=self.symbol,
+            name=self.name or self.symbol,
+            prop_type=self.prop_type,
+            currency=self.currency,
+            is_public=True,
+            description=self.description,
+            custom_props={
+                'exchange': self.exchange,
+                'industry': self.industry,
+                'sector': self.sector,
+                'country': self.country,
+                'website': self.website,
+            },
+        )
+        
+    @classmethod
+    def from_property(cls, property: Property) -> 'PublicPropInfo':
+        return cls(
+            symbol=property.symbol,
+            name=property.name,
+            prop_type=property.prop_type,
+            currency=property.currency,
+            exchange=property.custom_props.get('exchange'),
+            industry=property.custom_props.get('industry'),
+            sector=property.custom_props.get('sector'),
+            country=property.custom_props.get('country'),
+            website=property.custom_props.get('website'),
+            description=property.description,
+        )
     
 class YFinancePricePoint(BaseModel):
     dt: date = Field(

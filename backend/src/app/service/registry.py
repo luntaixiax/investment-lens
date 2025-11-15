@@ -49,7 +49,7 @@ class RegistryService:
             raise NotExistError(f"Symbol {symbol} does not exist")
         
         public_prop_info = await self.yfinance_service.get_public_prop_info(symbol)
-        property = self.to_property(public_prop_info)
+        property = public_prop_info.to_property()
         try:
             await self.register_public_property(property)
         except AlreadyExistError as e:
@@ -63,7 +63,7 @@ class RegistryService:
             *[self.yfinance_service.get_public_prop_info(symbol) for symbol in symbols]
         )
         properties = [
-            self.to_property(info) for info in infos
+            info.to_property() for info in infos
         ]
         try:
             await self.register_public_properties(properties)
@@ -244,22 +244,13 @@ class RegistryService:
         properties = await self.property_repository.gets(prop_ids)
         return properties
     
-    def to_property(self, info: PublicPropInfo) -> Property:
-        return Property(
-            symbol=info.symbol,
-            name=info.name or info.symbol,
-            currency=info.currency,
-            prop_type=info.prop_type,
-            is_public=True,
-            description=info.description
-        )
-    
     async def blurry_search_public(self, keyword: str, limit: int = 10) -> list[Property]:
         return await self.property_repository.blurry_search_public(keyword, limit)
     
     async def blurry_search_yfinance(self, keyword: str, limit: int = 10) -> list[PublicPropInfo]:
         properties = await self.blurry_search_public(keyword, limit)
-        infos = await asyncio.gather(
-            *[self.yfinance_service.get_public_prop_info(property.symbol) for property in properties]
-        )
+        infos = [PublicPropInfo.from_property(property) for property in properties]
+        # infos = await asyncio.gather(
+        #     *[self.yfinance_service.get_public_prop_info(property.symbol) for property in properties]
+        # )
         return infos

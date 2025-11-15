@@ -2,7 +2,8 @@ from functools import partial
 from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from src.app.utils.tools import id_generator
-from src.app.model.enums import CurType, PropertyType, PlanType
+from src.app.model.enums import CurType, PropertyType, PlanType, EstateType, \
+    BusinessType, UnderlyingType, RiskLevel, LiquidityType
 
 class Account(BaseModel):
     
@@ -59,6 +60,9 @@ class Property(BaseModel):
     description: str | None = Field(
         description='The description of the property.',
     )
+    custom_props: dict[str, Any] = Field(
+        description='Custom properties of the property.',
+    )
     
     @model_validator(mode='after')
     def check_is_public(self) -> 'Property':
@@ -86,3 +90,164 @@ class PrivatePropOwnership(BaseModel):
     user_id: str = Field(
         description='The ID of the user the ownership belongs to.',
     )
+    
+class RealEstateProperty(BaseModel):
+    """ real estate property, not persist directly in the database """
+    
+    name: str = Field(
+        description='The nickname of the real estate property.',
+    )
+    address: str = Field(
+        description='The address of the real estate property.',
+    )
+    country: str = Field(
+        description='The country of the real estate property.',
+    )
+    currency: CurType = Field(
+        description='The currency of the real estate property.',
+    )
+    estate_type: EstateType = Field(
+        description='The type of the real estate property.',
+    )
+    size: float = Field(
+        description='The size of the real estate property. (in square feet)',
+    )
+    year_built: int = Field(
+        description='The year the real estate property was built.',
+    )
+    description: str | None = Field(
+        description='The description of the property.',
+    )
+    
+    def to_property(self) -> Property:
+        return Property(
+            symbol=id_generator(prefix='real-', length=8),
+            name=self.name,
+            prop_type=PropertyType.REAL_ESTATE,
+            currency=self.currency,
+            is_public=False,
+            description=self.description or f"{self.estate_type} in {self.address}",
+            custom_props={
+                'address': self.address,
+                'country': self.country,
+                'estate_type': self.estate_type,
+                'size': self.size,
+                'year_built': self.year_built,
+            },
+        )
+        
+class BusinessProperty(BaseModel):
+    """ business property, not persist directly in the database """
+    
+    name: str = Field(
+        description='The nickname of the business.',
+    )
+    address: str = Field(
+        description='The address of the business.',
+    )
+    country: str = Field(
+        description='The country of the business.',
+    )
+    business_type: BusinessType = Field(
+        description='The type of the business.',
+    )
+    currency: CurType = Field(
+        description='The currency of the business.',
+    )
+    year_founded: int = Field(
+        description='The year the business was founded.',
+    )
+    description: str | None = Field(
+        description='The description of the business.',
+    )
+    
+    
+    def to_property(self) -> Property:
+        return Property(
+            symbol=id_generator(prefix='biz-', length=8),
+            name=self.name,
+            prop_type=PropertyType.BUSINESS,
+            currency=self.currency,
+            is_public=False,
+            description=self.description or f"{self.name} ({self.business_type})",
+            custom_props={
+                'address': self.address,
+                'country': self.country,
+                'business_type': self.business_type,
+                'year_founded': self.year_founded,
+            },
+        )
+        
+class PrivateFundProperty(BaseModel):
+    """ private fund property, not persist directly in the database """
+    
+    name: str = Field(
+        description='The nickname of the private fund.',
+    )
+    currency: CurType = Field(
+        description='The currency of the private fund.',
+    )
+    management: str = Field(
+        description='The management company of the private fund.',
+    )
+    underlying: UnderlyingType = Field(
+        description='The underlying assets of the private fund.',
+    )
+    risk_level: RiskLevel = Field(
+        description='The risk level of the private fund.',
+    )
+    liquidity: LiquidityType = Field(
+        description='The liquidity of the private fund.',
+    )
+    description: str | None = Field(
+        description='The description of the private fund.',
+    )
+    
+    def to_property(self) -> Property:
+        return Property(
+            symbol=id_generator(prefix='fund-', length=8),
+            name=self.name,
+            prop_type=PropertyType.FUND_PRIV,
+            currency=self.currency,
+            is_public=False,
+            description=self.description or f"{self.name} ({self.management})",
+            custom_props={
+                'management': self.management,
+                'underlying': self.underlying,
+                'risk_level': self.risk_level,
+                'liquidity': self.liquidity,
+            },
+        )
+        
+class DebtProperty(BaseModel):
+    """ debt property, not persist directly in the database """
+    
+    name: str = Field(
+        description='The nickname of the debt.',
+    )
+    currency: CurType = Field(
+        description='The currency of the debt.',
+    )
+    borrower: str = Field(
+        description='The borrower of the debt.',
+    )
+    risk_level: RiskLevel = Field(
+        description='The risk level of the debt.',
+    )
+    description: str | None = Field(
+        description='The description of the debt.',
+    )
+    
+    def to_property(self) -> Property:
+        return Property(
+            symbol=id_generator(prefix='debt-', length=8),
+            name=self.name,
+            prop_type=PropertyType.DEBT,
+            currency=self.currency,
+            is_public=False,
+            description=self.description or f"Private debt to {self.borrower}",
+            custom_props={
+                'borrower': self.borrower,
+                'risk_level': self.risk_level,
+            },
+        )

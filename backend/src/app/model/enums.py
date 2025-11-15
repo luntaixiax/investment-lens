@@ -1,4 +1,4 @@
-from enum import IntEnum, unique
+from enum import IntEnum, Enum, unique
 
 @unique
 class CurType(IntEnum):
@@ -31,7 +31,8 @@ class PropertyType(IntEnum):
     REAL_ESTATE = 8
     CRYPTO = 9
     DEBT = 10 # personal debt
-    OTHER = 11
+    BUSINESS = 11 # business (company, franchise, etc.)
+    OTHER = 12
     
 @unique
 class PlanType(IntEnum):
@@ -56,3 +57,44 @@ class TransactionType(IntEnum):
     DIVIDEND = 6
     TAX = 7
     OTHER = 8
+    
+    
+@unique
+class EstateType(str, Enum):
+    HOUSE = "house"
+    APARTMENT = "apartment"
+    CONDO = "condo"
+    TOWNHOUSE = "townhouse"
+    LOT = "lot"
+    OTHER = "other"
+    
+@unique
+class BusinessType(str, Enum):
+    CORPORATION = "corporation"
+    SMALL_BUSINESS = "small business"
+    FRANCHISE = "franchise"
+    SOLE_PROPRIETORSHIP = "sole proprietorship"
+    PARTNERSHIP = "partnership"
+    OTHER = "other"
+    
+@unique
+class UnderlyingType(str, Enum):
+    EQUITY = "equity"
+    DEBT = "debt"
+    COMMODITY = "commodity"
+    REAL_ESTATE = "real property"
+    PROJECT = "project"
+    HYBRID = "hybrid"
+    OTHER = "other"
+    
+@unique
+class RiskLevel(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    
+@unique
+class LiquidityType(str, Enum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"

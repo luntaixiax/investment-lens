@@ -1,3 +1,4 @@
+from typing import Any
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, SQLModel, Column, create_engine 
 from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, Date, DECIMAL, Index
@@ -149,6 +150,12 @@ class PropertyORM(SQLModelWithSort, table=True):
     description: str | None = Field(
         sa_column=Column(
             Text(),
+            nullable = True
+        )
+    )
+    custom_props: dict[str, Any] = Field(
+        sa_column=Column(
+            JSON(),
             nullable = True
         )
     )
