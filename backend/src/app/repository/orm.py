@@ -1,6 +1,6 @@
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, SQLModel, Column, create_engine 
-from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, Date, DECIMAL
+from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, Date, DECIMAL, Index
 from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceType
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from datetime import date
@@ -96,6 +96,15 @@ class FxORM(SQLModelWithSort, table=True):
 class PropertyORM(SQLModelWithSort, table=True):
     __collection__: str = 'primary'
     __tablename__: str = "property"
+    
+    __table_args__ = (
+        Index(
+            "ft_symbol_name_descp",  # index name
+            "symbol", "name", "description",
+            mysql_prefix="FULLTEXT"
+        ),
+    )
+
     
     prop_id: str = Field(
         sa_column=Column(

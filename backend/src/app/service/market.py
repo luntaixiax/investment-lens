@@ -144,22 +144,33 @@ class YFinanceService:
             ) for dt, rows in df.iterrows()
         ] if not df.empty else []
         
+    def to_property(self, info: PublicPropInfo) -> Property:
+        return Property(
+            symbol=info.symbol,
+            name=info.name or info.symbol,
+            currency=info.currency,
+            prop_type=info.prop_type,
+            is_public=True,
+            description=info.description
+        )
+        
     async def register(self, symbol: str):
         if not await self.exists(symbol):
             raise NotExistError(f"Symbol {symbol} does not exist")
         public_prop_info = await self.get_public_prop_info(symbol)
         
-        property = Property(
-            symbol=public_prop_info.symbol,
-            name=public_prop_info.name,
-            currency=public_prop_info.currency,
-            prop_type=public_prop_info.prop_type,
-            is_public=True,
-            description=public_prop_info.description
-        )
+        property = self.to_property(public_prop_info)
         await self.registry_service.register_public_property(property)
         
-
+    async def register_many(self, symbols: list[str]):
+        # Parallelize API calls (exists and get_public_prop_info) for better performance
+        # Then batch insert all properties in a single transaction
+        infos = await asyncio.gather(*[self.get_public_prop_info(symbol) for symbol in symbols])
+        properties = [
+            self.to_property(info) for info in infos
+        ]
+        await self.registry_service.register_public_properties(properties)
+        
 FALL_BACK_CUR = {
     CurType.MOP : CurType.HKD
 }

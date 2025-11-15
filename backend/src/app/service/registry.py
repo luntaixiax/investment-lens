@@ -23,6 +23,21 @@ class RegistryService:
                 )
         else:
             raise OpNotPermittedError(f"Property {property} is not public")
+    
+    async def register_public_properties(self, properties: list[Property]):
+        """Batch register multiple public properties in a single transaction."""
+        # Validate all are public
+        for property in properties:
+            if not property.is_public:
+                raise OpNotPermittedError(f"Property {property} is not public")
+        
+        try:
+            await self.property_repository.adds(properties)
+        except AlreadyExistError as e:
+            raise AlreadyExistError(
+                f"Some properties already exist",
+                details="N/A" # don't pass database info
+            )
         
     async def register_private_property(self, property: Property, user_id: str):
         if not property.is_public:

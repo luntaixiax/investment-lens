@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Session, delete, select, insert, distinct
 from sqlmodel import Session, select, delete, distinct, case, func as f, and_, or_
 from sqlalchemy.exc import NoResultFound, IntegrityError
+from sqlalchemy import text, desc
 from src.app.model.enums import CurType
 from src.app.model.registry import Property, PrivatePropOwnership
 from src.app.repository.orm import PropertyORM, PrivatePropOwnershipORM
@@ -40,6 +41,16 @@ class PropertyRepository:
     async def add(self, property: Property):
         property_orm = self.toPropertyORM(property)
         self.db_session.add(property_orm)
+        try:
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            raise AlreadyExistError(details=str(e))
+    
+    async def adds(self, properties: List[Property]):
+        """Batch insert multiple properties in a single transaction."""
+        property_orms = [self.toPropertyORM(property) for property in properties]
+        self.db_session.add_all(property_orms)
         try:
             await self.db_session.commit()
         except IntegrityError as e:
@@ -108,11 +119,12 @@ class PropertyRepository:
                 or_(
                     f.lower(PropertyORM.symbol).contains(keyword.lower()),
                     f.lower(PropertyORM.name).contains(keyword.lower()),
-                    f.lower(PropertyORM.description).contains(keyword.lower())
+                    f.lower(PropertyORM.description).contains(keyword.lower()),
+                    text(f"MATCH(symbol, name, description) AGAINST('*{keyword}*' IN BOOLEAN MODE)")
                 )
             )
+            .order_by(desc(text(f"MATCH(symbol, name, description) AGAINST('*{keyword}*' IN BOOLEAN MODE)")))
             .limit(limit)
-            .order_by(PropertyORM.symbol)
         )
         result = await self.db_session.execute(sql)
         return [self.fromPropertyORM(p) for p in result.scalars().all()]
