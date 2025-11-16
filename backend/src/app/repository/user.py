@@ -150,6 +150,23 @@ class UserRepository:
             raise NotExistError(details=str(e))
         return self.toUser(p)
     
+    async def get_by_email(self, email: str) -> User:
+        """Get a user from the database by email.
+        
+        Args:
+            email (str): The email of the user to get.
+            
+        Returns:
+            User: The User object.
+        """
+        sql = select(UserORM).where(UserORM.email == email)
+        try:
+            result = await self.db_session.execute(sql)
+            p = result.scalars().one()
+        except NoResultFound as e:
+            raise NotExistError(details=str(e))
+        return self.toUser(p)
+    
     async def get_internal_user_by_name(self, username: str) -> UserInternalRead:
         """Get an internal user from the database by name.
         

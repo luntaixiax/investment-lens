@@ -138,3 +138,25 @@ async def list_user(
     admin_user: User = Depends(get_admin_user)
 ) -> list[User]:
     return await user_service.list_user()
+
+@router.get("/request_reset_password")
+async def request_reset_password(
+    email: str,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    await auth_service.request_reset_password(email)
+    
+@router.post("/validate_reset_password_token")
+async def validate_reset_password_token(
+    token: str,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+    return await auth_service.validate_reset_password_token(token)
+
+@router.post("/reset_password")
+async def reset_password(
+    token: str,
+    new_password: str,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    await auth_service.reset_password(token, new_password)

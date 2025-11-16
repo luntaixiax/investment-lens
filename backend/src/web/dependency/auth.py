@@ -6,13 +6,16 @@ from src.app.model.exceptions import PermissionDeniedError
 from src.app.repository.user import UserRepository
 from src.app.service.auth import AuthService
 from src.web.dependency.repository import get_user_repository
+from src.app.service.email import EmailService
+from src.web.dependency.service import get_email_service
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/management/login", auto_error=False)
 
 async def get_auth_service(
-    user_repository: UserRepository = Depends(get_user_repository)
+    user_repository: UserRepository = Depends(get_user_repository),
+    email_service: EmailService = Depends(get_email_service)
 ) -> AuthService:
-    return AuthService(user_repository=user_repository)
+    return AuthService(user_repository=user_repository, email_service=email_service)
 
 async def get_current_user(
     token: str | None = Depends(oauth2_scheme),

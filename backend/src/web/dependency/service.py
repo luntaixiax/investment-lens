@@ -8,6 +8,7 @@ from src.web.dependency.repository import get_fx_repository
 from src.app.service.market import YFinanceService
 from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
 from src.app.service.registry import RegistryService
+from src.app.service.email import EmailService
 from src.web.dependency.repository import get_property_repository, get_private_prop_ownership_repository
 
 async def get_user_service(
@@ -33,3 +34,6 @@ async def get_registry_service(
         private_prop_ownership_repository=private_prop_ownership_repository,
         yfinance_service=yfinance_service
     )
+    
+async def get_email_service() -> EmailService:
+    return EmailService()

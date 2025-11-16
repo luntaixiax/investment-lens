@@ -5,7 +5,7 @@ from starlette.responses import HTMLResponse, JSONResponse
 from src.web.api.v1.api import api_router
 from src.app.model.exceptions import AlreadyExistError, NotExistError, FKNotExistError, \
     FKNoDeleteUpdateError, OpNotPermittedError, NotMatchWithSystemError, PermissionDeniedError, \
-    StrongPermissionDeniedError
+    StrongPermissionDeniedError, UnexpectedError
 
 app = FastAPI(
     title="FastAPI", 
@@ -126,6 +126,16 @@ async def op_not_permitted_error_handler(_: Request, exc: OpNotPermittedError) -
 async def not_match_system_error_handler(_: Request, exc: NotMatchWithSystemError) -> JSONResponse:
     return JSONResponse(
         status_code = 550,
+        content = {
+            "message": exc.message,
+            "details": exc.details
+        },
+    )
+    
+@app.exception_handler(UnexpectedError)
+async def unexpected_error_handler(_: Request, exc: UnexpectedError) -> JSONResponse:
+    return JSONResponse(
+        status_code = 560,
         content = {
             "message": exc.message,
             "details": exc.details

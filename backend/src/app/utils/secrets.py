@@ -46,6 +46,7 @@ def get_secret() -> dict:
     VAULT_MOUNT_PATH = {
         'database' : f"{ENV}/database",
         'auth': f"{ENV}/auth",
+        'mailbox': f"{ENV}/mailbox",
     }
     
     database = get_vault_resp(
@@ -56,10 +57,15 @@ def get_secret() -> dict:
         mount_point = VAULT_MOUNT_POINT,
         path = VAULT_MOUNT_PATH['auth'],
     )
+    mailbox = get_vault_resp(
+        mount_point = VAULT_MOUNT_POINT,
+        path = VAULT_MOUNT_PATH['mailbox'],
+    )
     
     return {
         'database' : database,
-        'auth': auth
+        'auth': auth,
+        'mailbox': mailbox
     }
     
     

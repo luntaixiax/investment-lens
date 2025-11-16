@@ -5,9 +5,10 @@ from pydantic import ValidationError
 from src.app.utils.secrets import get_secret
 from src.app.utils.rate_limiter import get_rate_limiter
 from src.app.model.exceptions import NotExistError, PermissionDeniedError, \
-    StrongPermissionDeniedError
-from src.app.model.user import Token, User
+    StrongPermissionDeniedError, UnexpectedError
+from src.app.model.user import Token, User, UserCreate
 from src.app.repository.user import UserRepository
+from src.app.service.email import EmailService
 
 def create_access_token(user: User, secret_key: str, 
             algorithm: str="HS256", expires_minutes: int = 15) -> str:
@@ -35,14 +36,15 @@ def decode_token(token: str, secret_key: str, algorithm: str="HS256") -> User:
 
 class AuthService:
 
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: UserRepository, email_service: EmailService):
         self.user_repository = user_repository
         self.rate_limiter = get_rate_limiter(
             max_attempts=5,
             lockout_duration_minutes=5,
             window_minutes=10
         )
-
+        self.email_service = email_service
+        
     async def login(self, username: str, password: str) -> Token:
         # Check rate limiting before attempting authentication
         is_allowed, error_message = await self.rate_limiter.is_allowed(username)
@@ -85,6 +87,7 @@ class AuthService:
         return Token(access_token=access_token, token_type="bearer")
         
     async def verify_token(self, token: str) -> User:
+        # shared by login and reset password process
         try:
             # get auth config is IO bounded operation, so we run it in a separate thread to avoid blocking the main thread
             auth_config = (await asyncio.to_thread(get_secret))['auth'] # type: ignore
@@ -101,3 +104,46 @@ class AuthService:
                 details=token
             )
         return decoded_token
+    
+    async def request_reset_password(self, email: str):
+        try:
+            user = await self.user_repository.get_by_email(email)
+        except NotExistError:
+            raise NotExistError(
+                f"User {email} does not exist",
+                details="N/A" # don't pass database info
+            )
+        
+        auth_config = (await asyncio.to_thread(get_secret))['auth'] # type: ignore
+        access_token = create_access_token(
+            user=user,
+            secret_key=auth_config['secret_key'],
+            algorithm=auth_config['algorithm'],
+            expires_minutes=int(auth_config['expires_minutes'])
+        )
+        
+        # send email to user with the access token
+        html_body = self.email_service.render_body(
+            "reset_email.html",
+            context={"token": access_token}
+        )
+        await self.email_service.send_email(
+            to_email=user.email,
+            subject="Reset Your Password",
+            html_body=html_body
+        )
+        
+    async def validate_reset_password_token(self, token: str) -> User:
+        user = await self.verify_token(token)
+        return user
+    
+    async def reset_password(self, token: str, new_password: str):
+        user = await self.validate_reset_password_token(token)
+        updated_user = UserCreate(
+            user_id=user.user_id,
+            username=user.username,
+            email=user.email,
+            is_admin=user.is_admin,
+            password=new_password
+        )
+        await self.user_repository.update(updated_user)
