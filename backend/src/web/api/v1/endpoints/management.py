@@ -139,7 +139,7 @@ async def list_user(
 ) -> list[User]:
     return await user_service.list_user()
 
-@router.get("/request_reset_password")
+@router.post("/request_reset_password")
 async def request_reset_password(
     email: str,
     auth_service: AuthService = Depends(get_auth_service),

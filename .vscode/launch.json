@@ -5,6 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch Frontend (Chrome)",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend",
+            "preLaunchTask": "Start Vite Dev Server"
+        },
+        {
+            "name": "Launch Frontend (Firefox)",
+            "request": "launch",
+            "type": "firefox",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend",
+            "preLaunchTask": "Start Vite Dev Server"
+        },
+        {
             "name": "FastAPI Debugger",
             "type": "debugpy",
             "request": "launch",

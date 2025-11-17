@@ -1,0 +1,8 @@
+.reset-password-link {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: right;
+}

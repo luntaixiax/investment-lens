@@ -38,7 +38,8 @@
     color: var(--primary);
 }
 
-.register-form-row input {
+.register-form-row input,
+.register-form-row textarea {
     padding: 0.75rem;
     border: 1.5px solid var(--border);
     border-radius: 0.5rem;
@@ -46,19 +47,24 @@
     color: var(--text-primary);
     background: var(--background);
     transition: all 0.2s ease-in-out;
+    font-family: inherit;
+    resize: vertical;
 }
 
-.register-form-row input::placeholder {
+.register-form-row input::placeholder,
+.register-form-row textarea::placeholder {
     color: var(--text-muted);
 }
 
-.register-form-row input:focus {
+.register-form-row input:focus,
+.register-form-row textarea:focus {
     outline: none;
     border-color: var(--border-focus);
     box-shadow: 0 0 0 3px var(--primary-light);
 }
 
-.register-form-row input:hover {
+.register-form-row input:hover,
+.register-form-row textarea:hover {
     border-color: var(--text-muted);
 }
 

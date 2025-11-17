@@ -1,7 +1,7 @@
 import './LoginForm.css';
 import { useForm } from 'react-hook-form';
 import { useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../hooks/AuthContext';
 
 type LoginData = {
@@ -112,6 +112,11 @@ export default function LoginForm() {
 					&& <p className="error">‼️🙊 {errors.password.message}</p> // show the error message defined above
 				}
 			</div>
+
+			<Link to="/reset_password" className="reset-password-link">
+				<i className="fa-solid fa-key"></i>
+				<span>&nbsp; Forget Password</span>
+			</Link>
 
 
 			<button
