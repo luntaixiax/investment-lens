@@ -64,6 +64,7 @@ class PublicPropInfo(BaseModel):
             prop_type=self.prop_type,
             currency=self.currency,
             is_public=True,
+            is_cash_prop=False,
             description=self.description,
             custom_props={
                 'exchange': self.exchange,
@@ -81,6 +82,7 @@ class PublicPropInfo(BaseModel):
             name=property.name,
             prop_type=property.prop_type,
             currency=property.currency,
+            is_cash_prop=property.is_cash_prop,
             exchange=property.custom_props.get('exchange'),
             industry=property.custom_props.get('industry'),
             sector=property.custom_props.get('sector'),

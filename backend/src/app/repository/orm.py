@@ -141,6 +141,13 @@ class PropertyORM(SQLModelWithSort, table=True):
             nullable = False
         )
     )
+    is_cash_prop: bool = Field(
+        sa_column=Column(
+            Boolean(create_constraint=True), 
+            default = False, 
+            nullable = False
+        )
+    )
     prop_type: PropertyType = Field(
         sa_column=Column(
             ChoiceType(PropertyType, impl = Integer()), 

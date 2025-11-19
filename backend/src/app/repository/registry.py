@@ -23,6 +23,7 @@ class PropertyRepository:
             name=property.name,
             currency=property.currency,
             prop_type=property.prop_type,
+            is_cash_prop=property.is_cash_prop,
             is_public=property.is_public,
             description=property.description,
             custom_props=property.custom_props
@@ -35,6 +36,7 @@ class PropertyRepository:
             name=property_orm.name,
             currency=property_orm.currency,
             prop_type=property_orm.prop_type,
+            is_cash_prop=property_orm.is_cash_prop,
             is_public=property_orm.is_public,
             description=property_orm.description,
             custom_props=property_orm.custom_props
@@ -83,6 +85,7 @@ class PropertyRepository:
             p.name = property.name
             p.currency = property.currency
             p.prop_type = property.prop_type
+            p.is_cash_prop = property.is_cash_prop
             p.is_public = property.is_public
             p.description = property.description
             p.custom_props = property.custom_props
@@ -117,7 +120,10 @@ class PropertyRepository:
     async def blurry_search_public(self, keyword: str, limit: int = 10) -> List[Property]:
         sql = (
             select(PropertyORM)
-            .where(PropertyORM.is_public == True)
+            .where(
+                PropertyORM.is_public == True,
+                PropertyORM.is_cash_prop == False
+            )
             .where(
                 or_(
                     f.lower(PropertyORM.symbol).contains(keyword.lower()),

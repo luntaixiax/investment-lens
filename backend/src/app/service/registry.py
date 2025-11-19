@@ -2,6 +2,7 @@ import asyncio
 from src.app.service.market import YFinanceService
 from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
 from src.app.model.registry import Property, PrivatePropOwnership
+from src.app.model.enums import CurType, PropertyType
 from src.app.model.exceptions import AlreadyExistError, NotExistError, OpNotPermittedError, \
     FKNoDeleteUpdateError, PermissionDeniedError
 from src.app.model.market import PublicPropInfo
@@ -17,19 +18,22 @@ class RegistryService:
         self.private_prop_ownership_repository = private_prop_ownership_repository
         self.yfinance_service = yfinance_service
         
-    async def register_public_property(self, property: Property):
+    async def register_public_property(self, property: Property, allow_exist: bool = False):
         if property.is_public:
             try:
                 await self.property_repository.add(property)
             except AlreadyExistError as e:
-                raise AlreadyExistError(
-                    f"Property {property} already exist",
-                    details="N/A" # don't pass database info
-                )
+                if allow_exist:
+                    pass # allow exist
+                else:
+                    raise AlreadyExistError(
+                        f"Property {property} already exist",
+                        details="N/A" # don't pass database info
+                    )
         else:
             raise OpNotPermittedError(f"Property {property} is not public")
     
-    async def register_public_properties(self, properties: list[Property]):
+    async def register_public_properties(self, properties: list[Property], allow_exist: bool = False):
         """Batch register multiple public properties in a single transaction."""
         # Validate all are public
         for property in properties:
@@ -39,10 +43,13 @@ class RegistryService:
         try:
             await self.property_repository.adds(properties)
         except AlreadyExistError as e:
-            raise AlreadyExistError(
-                f"Some properties already exist",
-                details="N/A" # don't pass database info
-            )
+            if allow_exist:
+                pass # allow exist
+            else:
+                raise AlreadyExistError(
+                    f"Some properties already exist",
+                    details="N/A" # don't pass database info
+                )
             
     async def register_yfinance_property(self, symbol: str):
         if not await self.yfinance_service.exists(symbol):
@@ -50,10 +57,7 @@ class RegistryService:
         
         public_prop_info = await self.yfinance_service.get_public_prop_info(symbol)
         property = public_prop_info.to_property()
-        try:
-            await self.register_public_property(property)
-        except AlreadyExistError as e:
-            pass # allow exist
+        await self.register_public_property(property, allow_exist=True)
             
         
     async def register_yfinance_properties(self, symbols: list[str]):
@@ -65,10 +69,22 @@ class RegistryService:
         properties = [
             info.to_property() for info in infos
         ]
-        try:
-            await self.register_public_properties(properties)
-        except AlreadyExistError as e:
-            pass # allow exist
+        await self.register_public_properties(properties, allow_exist=True)
+        
+    async def register_cash_properties(self):
+        # only execute once when startup
+        for cur in CurType:
+            property = Property(
+                symbol=cur.name,
+                name=cur.name,
+                prop_type=PropertyType.CASH,
+                currency=cur,
+                is_cash_prop=True,
+                is_public=True,
+                description=f"Cash property for {cur.name}",
+                custom_props={},
+            )
+            await self.register_public_property(property, allow_exist=True)
     
         
     async def register_private_property(self, property: Property, user_id: str):

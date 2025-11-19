@@ -142,3 +142,10 @@ async def register_yfinance_properties(
     await registry_service.register_yfinance_properties(
         symbols
     )
+    
+@router.post("/register_cash_properties")
+async def register_cash_properties(
+    registry_service: RegistryService = Depends(get_registry_service),
+    admin_user: User = Depends(get_admin_user)
+) -> None:
+    await registry_service.register_cash_properties()

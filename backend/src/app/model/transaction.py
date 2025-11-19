@@ -35,6 +35,12 @@ class Transaction(BaseModel):
     price: float = Field(
         description='The price of the transaction.',
     )
+    cash_acct_id: str = Field(
+        description='The ID of counter cash account..',
+    )
+    cash_prop_id: str = Field(
+        description='The ID of counter cash property.',
+    )
     description: str = Field(
         description='The description of the transaction.',
     )

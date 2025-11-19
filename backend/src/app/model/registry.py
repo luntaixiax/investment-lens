@@ -50,6 +50,10 @@ class Property(BaseModel):
     prop_type: PropertyType = Field(
         description='The type of the property.',
     )
+    is_cash_prop: bool = Field(
+        default=False,
+        description='Whether the property is a cash property. (counter accout for non-cash property transactions)',
+    )
     currency: CurType = Field(
         description='The currency of the property.',
     ) # TODO: should it be here?
@@ -69,6 +73,20 @@ class Property(BaseModel):
         # these asset belongs to the owner only, and is unique to the owner
         if self.prop_type in [PropertyType.REAL_ESTATE, PropertyType.DEBT]:
             self.is_public = False
+        return self
+    
+    @model_validator(mode='after')
+    def check_is_cash_prop(self) -> 'Property':
+        if self.is_cash_prop:
+            if self.prop_type != PropertyType.CASH:
+                raise ValueError('Cash property must be of type CASH')
+            if not self.is_public:
+                raise ValueError('Cash property must be public')
+            if self.symbol != self.currency.name:
+                raise ValueError('Cash property symbol must be the same as the currency name')
+        else:
+            if self.prop_type == PropertyType.CASH:
+                raise ValueError('Non-cash property cannot be of type CASH')
         return self
     
     

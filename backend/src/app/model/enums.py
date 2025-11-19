@@ -32,7 +32,8 @@ class PropertyType(IntEnum):
     CRYPTO = 9
     DEBT = 10 # personal debt
     BUSINESS = 11 # business (company, franchise, etc.)
-    OTHER = 12
+    LENDING = 12 # lending (personal loan, etc.)
+    OTHER = 13
     
 @unique
 class PlanType(IntEnum):
@@ -55,8 +56,9 @@ class TransactionType(IntEnum):
     FEE = 4
     INTEREST = 5
     DIVIDEND = 6
-    TAX = 7
-    OTHER = 8
+    RENT = 7
+    TAX = 8
+    OTHER = 9
     
     
 @unique
