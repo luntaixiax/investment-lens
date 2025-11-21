@@ -6,7 +6,8 @@ from fastapi import Depends
 from src.app.repository.user import UserRepository
 from src.app.utils.secrets import get_async_db_url, get_sync_db_url
 from src.app.repository.market import FxRepository
-from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
+from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository, \
+    AccountRepository
 
 # Global state for caching engine and sessionmaker
 _async_engine: AsyncEngine | None = None
@@ -95,8 +96,12 @@ async def get_private_prop_ownership_repository(
     async_session: AsyncSession = Depends(get_async_session)
 ) -> PrivatePropOwnershipRepository:
     return PrivatePropOwnershipRepository(db_session=async_session)
-        
-        
+
+async def get_account_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> AccountRepository:
+    return AccountRepository(db_session=async_session)
+
 if __name__ == "__main__":
     from sqlalchemy_utils import database_exists, create_database, drop_database
     from sqlalchemy import create_engine

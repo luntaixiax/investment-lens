@@ -1,11 +1,16 @@
 import asyncio
+from datetime import timedelta
+from yokedcache import cached
 from src.app.service.market import YFinanceService
-from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
-from src.app.model.registry import Property, PrivatePropOwnership
+from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository, \
+    AccountRepository
+from src.app.model.registry import Property, PrivatePropOwnership, Account
 from src.app.model.enums import CurType, PropertyType
 from src.app.model.exceptions import AlreadyExistError, NotExistError, OpNotPermittedError, \
     FKNoDeleteUpdateError, PermissionDeniedError
 from src.app.model.market import PublicPropInfo
+from src.app.repository.cache import cache
+from src.app.utils.cache import deserialize_cached_model
 
 class RegistryService:
     
@@ -270,3 +275,87 @@ class RegistryService:
         #     *[self.yfinance_service.get_public_prop_info(property.symbol) for property in properties]
         # )
         return infos
+    
+class AccountService:
+    
+    def __init__(self, account_repository: AccountRepository):
+        self.account_repository = account_repository
+        
+    async def create_account(self, account: Account, user_id: str):
+        if account.user_id != user_id:
+            raise OpNotPermittedError(
+                f"Account user ID {account.user_id} must be the same as the user ID {user_id}",
+                details="N/A" # don't pass database info
+            )
+        try:
+            await self.account_repository.add(account)
+        except AlreadyExistError as e:
+            raise AlreadyExistError(
+                f"Account {account.acct_name} already exist",
+                details="N/A" # don't pass database info
+            )
+            
+    async def remove_account(self, acct_id: str, user_id: str):
+        # verify account exists and belongs to the user
+        existing_account = await self.get_account(acct_id, user_id)
+        try:
+            await self.account_repository.remove(acct_id)
+            # Clear cache after successful deletion
+            await cache.invalidate_tags(tags=['user_accounts'])
+        except FKNoDeleteUpdateError as e:
+            raise FKNoDeleteUpdateError(
+                f"Account {acct_id} is associated with other data, cannot delete",
+                details=e.details
+            )
+            
+    async def update_account(self, account: Account, user_id: str):
+        if account.user_id != user_id:
+            raise OpNotPermittedError(
+                f"Account user ID {account.user_id} must be the same as the user ID {user_id}",
+                details="N/A" # don't pass database info
+            )
+        
+        # verify account exists and belongs to the user
+        existing_account = await self.get_account(account.acct_id, user_id)
+        
+        try:
+            await self.account_repository.update(account)
+            # Invalidate cache after successful update
+            await cache.invalidate_tags(tags=['user_accounts'])
+        except NotExistError as e:
+            raise NotExistError(
+                f"Account {account.acct_name} does not exist",
+                details="N/A" # don't pass database info
+            )
+        except FKNoDeleteUpdateError as e:
+            raise FKNoDeleteUpdateError(
+                f"Account {account.acct_name} is associated with other data, cannot update",
+                details=e.details
+            )
+            
+            
+    @deserialize_cached_model(Account)
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, acct_id, user_id: f"account_{acct_id}_{user_id}", 
+        ttl=int(timedelta(hours=24).total_seconds()),
+        tags=['user_accounts']
+    )
+    async def get_account(self, acct_id: str, user_id: str) -> Account:
+        existing_account = await self.account_repository.get(acct_id)
+        if existing_account.user_id != user_id:
+            raise OpNotPermittedError(
+                f"Account user ID {existing_account.user_id} must be the same as the user ID {user_id}",
+                details="N/A" # don't pass database info
+            )
+        return existing_account
+    
+    @deserialize_cached_model(Account)
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, user_id: f"accounts_{user_id}", 
+        ttl=int(timedelta(hours=24).total_seconds()),
+        tags=['user_accounts']
+    )
+    async def list_accounts(self, user_id: str) -> list[Account]:
+        return await self.account_repository.get_by_user_id(user_id)

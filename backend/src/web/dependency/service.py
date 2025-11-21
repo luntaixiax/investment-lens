@@ -6,10 +6,12 @@ from src.app.repository.market import FxRepository
 from src.app.service.market import FxService
 from src.web.dependency.repository import get_fx_repository
 from src.app.service.market import YFinanceService
-from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository
-from src.app.service.registry import RegistryService
+from src.app.repository.registry import PropertyRepository, \
+    PrivatePropOwnershipRepository, AccountRepository
+from src.app.service.registry import RegistryService, AccountService
 from src.app.service.email import EmailService
-from src.web.dependency.repository import get_property_repository, get_private_prop_ownership_repository
+from src.web.dependency.repository import get_property_repository, \
+    get_private_prop_ownership_repository, get_account_repository
 
 async def get_user_service(
     user_repository: UserRepository = Depends(get_user_repository)
@@ -37,3 +39,8 @@ async def get_registry_service(
     
 async def get_email_service() -> EmailService:
     return EmailService()
+
+async def get_account_service(
+    account_repository: AccountRepository = Depends(get_account_repository)
+) -> AccountService:
+    return AccountService(account_repository=account_repository)

@@ -48,17 +48,16 @@ class PlanType(IntEnum):
     OTHER = 8
 
 @unique
-class TransactionType(IntEnum):
-    DEPOSIT = 0
-    WITHDRAWAL = 1
-    BUY = 2
-    SELL = 3
-    FEE = 4
-    INTEREST = 5
-    DIVIDEND = 6
-    RENT = 7
-    TAX = 8
-    OTHER = 9
+class LegType(IntEnum):
+    # type of transaction leg
+    BUY = 1 # for property
+    SELL = 2 # for property
+    FEE = 3 # for property/cash account
+    INTEREST = 4 # for property / cash account
+    DIVIDEND = 5 # for property
+    RENT = 6 # for property
+    TAX = 7 # for cash account
+    OTHER = 8 # for property/cash account
     
     
 @unique

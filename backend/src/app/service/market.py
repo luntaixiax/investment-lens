@@ -11,6 +11,7 @@ from src.app.model.market import FxRate, FxPoint, YFinancePricePoint
 from src.app.repository.market import FxRepository
 from src.app.model.exceptions import NotExistError
 from src.app.repository.cache import cache
+from src.app.utils.cache import deserialize_cached_model
 
 
 class YFinanceWrapper:
@@ -111,20 +112,14 @@ class YFinanceService:
     async def exists(self, symbol: str) -> bool:
         return await asyncio.to_thread(YFinanceWrapper(symbol).exists)
     
+    @deserialize_cached_model(PublicPropInfo)
     @cached(
         cache=cache, 
         key_builder=lambda self, symbol: f"yfinance_public_prop_info_{symbol}", 
         ttl=int(timedelta(hours=24).total_seconds())
     )
-    async def _get_public_prop_info_cached(self, symbol: str):
-        return await asyncio.to_thread(YFinanceWrapper(symbol).get_public_prop_info)
-    
     async def get_public_prop_info(self, symbol: str) -> PublicPropInfo:
-        result = await self._get_public_prop_info_cached(symbol)
-        # If result comes from cache, it may be a dict instead of PublicPropInfo
-        if isinstance(result, dict):
-            return PublicPropInfo.model_validate(result)
-        return result
+        return await asyncio.to_thread(YFinanceWrapper(symbol).get_public_prop_info)
     
     async def get_hist_data(self, symbol: str, start_date: date, end_date: date) -> list[YFinancePricePoint]:
         df = await asyncio.to_thread(YFinanceWrapper(symbol).get_hist_data, start_date, end_date)

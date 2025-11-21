@@ -7,8 +7,8 @@ from sqlmodel import Session, select, delete, distinct, case, func as f, and_, o
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy import text, desc
 from src.app.model.enums import CurType
-from src.app.model.registry import Property, PrivatePropOwnership
-from src.app.repository.orm import PropertyORM, PrivatePropOwnershipORM
+from src.app.model.registry import Property, PrivatePropOwnership, Account
+from src.app.repository.orm import PropertyORM, PrivatePropOwnershipORM, AccountORM
 from src.app.model.exceptions import AlreadyExistError, FKNoDeleteUpdateError, NotExistError
 
 class PropertyRepository:
@@ -223,4 +223,79 @@ class PrivatePropOwnershipRepository:
         sql = select(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.user_id == user_id)
         result = await self.db_session.execute(sql)
         return [self.fromPrivatePropOwnershipORM(p) for p in result.scalars().all()]
+        
+        
+class AccountRepository:
+    
+    def __init__(self, db_session: AsyncSession):
+        self.db_session = db_session
+        
+    def toAccountORM(self, account: Account) -> AccountORM:
+        return AccountORM(
+            acct_id=account.acct_id,
+            user_id=account.user_id,
+            acct_name=account.acct_name,
+            plan_type=account.plan_type,
+            platform=account.platform
+        )
+        
+    def fromAccountORM(self, account_orm: AccountORM) -> Account:
+        return Account(
+            acct_id=account_orm.acct_id,
+            user_id=account_orm.user_id,
+            acct_name=account_orm.acct_name,
+            plan_type=account_orm.plan_type,
+            platform=account_orm.platform
+        )
+        
+    async def add(self, account: Account):
+        account_orm = self.toAccountORM(account)
+        self.db_session.add(account_orm)
+        try:
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            raise AlreadyExistError(details=str(e))
+        
+    async def remove(self, acct_id: str):
+        sql = delete(AccountORM).where(AccountORM.acct_id == acct_id)
+        try:
+            await self.db_session.execute(sql)
+            await self.db_session.commit()
+        except IntegrityError as e:
+            await self.db_session.rollback()
+            raise FKNoDeleteUpdateError(details=str(e))
+        
+    async def update(self, account: Account):
+        account_orm = self.toAccountORM(account)
+        sql = select(AccountORM).where(AccountORM.acct_id == account.acct_id)
+        try:
+            result = await self.db_session.execute(sql)
+            p = result.scalars().one()
+        except NoResultFound as e:
+            raise NotExistError(details=str(e))
+        
+        if not p == account_orm:
+            p.user_id = account.user_id
+            p.acct_name = account.acct_name
+            p.plan_type = account.plan_type
+            p.platform = account.platform
+            
+            self.db_session.add(p)
+            await self.db_session.commit()
+            await self.db_session.refresh(p) # update p to instantly have new values
+        
+    async def get(self, acct_id: str) -> Account:
+        sql = select(AccountORM).where(AccountORM.acct_id == acct_id)
+        try:
+            result = await self.db_session.execute(sql)
+            p = result.scalars().one()
+        except NoResultFound as e:
+            raise NotExistError(details=str(e))
+        return self.fromAccountORM(p)
+    
+    async def get_by_user_id(self, user_id: str) -> List[Account]:
+        sql = select(AccountORM).where(AccountORM.user_id == user_id)
+        result = await self.db_session.execute(sql)
+        return [self.fromAccountORM(p) for p in result.scalars().all()]
         

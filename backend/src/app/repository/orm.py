@@ -1,11 +1,11 @@
 from typing import Any
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, SQLModel, Column, create_engine 
-from sqlalchemy import ForeignKey, Boolean, JSON, ARRAY, Integer, String, Text, Date, DECIMAL, Index
+from sqlalchemy import ForeignKey, Boolean, JSON, TIMESTAMP, Integer, String, Text, Date, DECIMAL, Index
 from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceType
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from datetime import date
-from src.app.model.enums import CurType, PropertyType
+from src.app.model.enums import CurType, PropertyType, PlanType, LegType
 
 
 
@@ -89,7 +89,7 @@ class FxORM(SQLModelWithSort, table=True):
     )
     cur_dt: date = Field(
         sa_column=Column(
-            Date(), 
+            TIMESTAMP(timezone=True), 
             primary_key = True, 
             nullable = False
         )
@@ -208,3 +208,159 @@ class PrivatePropOwnershipORM(SQLModelWithSort, table=True):
             nullable = False
         )
     )
+    
+class AccountORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "account"
+    
+    acct_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    user_id: str = Field(
+        sa_column=Column(
+            String(length = 15), 
+            ForeignKey(
+                'users.user_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
+    )
+    acct_name: str = Field(
+        sa_column=Column(
+            String(length = 100), 
+            nullable = False
+        )
+    )
+    plan_type: PlanType = Field(
+        sa_column=Column(
+            ChoiceType(PlanType, impl = Integer()), 
+            nullable = False
+        )
+    )
+    platform: str = Field(
+        sa_column=Column(
+            String(length = 100), 
+            nullable = False    
+        )
+    )
+    
+    
+class TransactionORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "transaction"
+    
+    trans_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    user_id: str = Field(
+        sa_column=Column(
+            String(length = 15), 
+            ForeignKey(
+                'users.user_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
+    )
+    trans_dt: date = Field(
+        sa_column=Column(
+            TIMESTAMP(timezone=True), 
+            nullable = False
+        )
+    )
+    description: str = Field(
+        sa_column=Column(
+            Text(), 
+            nullable = False
+        )
+    )
+    
+class LegORM(SQLModelWithSort, table=True):
+    __collection__: str = 'primary'
+    __tablename__: str = "leg"
+    
+    __table_args__ = (
+        Index('idx_leg_user_id', 'user_id'),
+    )
+    
+    leg_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            primary_key = True, 
+            nullable = False
+        )
+    )
+    trans_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            ForeignKey(
+                'transaction.trans_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
+    )
+    user_id: str = Field(
+        sa_column=Column(
+            String(length = 15), 
+            ForeignKey(
+                'users.user_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
+    )
+    leg_type: LegType = Field(
+        sa_column=Column(
+            ChoiceType(LegType, impl = Integer()), 
+            nullable = False
+        )
+    )
+    acct_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            ForeignKey(
+                'account.acct_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),
+            nullable = False
+        )
+    )
+    prop_id: str = Field(
+        sa_column=Column(
+            String(length = 18), 
+            ForeignKey(
+                'property.prop_id', 
+                onupdate = 'CASCADE', 
+                ondelete = 'RESTRICT'
+            ),  
+            nullable = False
+        )
+    )
+    quantity: float = Field(
+        sa_column=Column(
+            DECIMAL(15, 5, asdecimal=False), 
+            nullable = False
+        )
+    )
+    price: float = Field(
+        sa_column=Column(
+            DECIMAL(15, 5, asdecimal=False), 
+            nullable = False
+        )
+    )
+    
