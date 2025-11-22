@@ -5,7 +5,42 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator, computed_fie
 from src.app.utils.tools import id_generator
 from src.app.model.enums import CurType, PropertyType, PlanType, LegType
 
-class Leg(BaseModel):
+
+class LegCreate(BaseModel):
+
+    leg_type: LegType = Field(
+        description='The type of the transaction leg.',
+    )
+    acct_id: str = Field(
+        description='The ID of the account the transaction belongs to.',
+    )
+    prop_id: str = Field(
+        description='The ID of the property the transaction belongs to.',
+    )
+    quantity: float = Field(
+        description='The quantity of the transaction.',
+    )
+    price: float = Field(
+        description='The price of the transaction.',
+    )
+    
+    @computed_field
+    @property
+    def amount(self) -> float:
+        return round(self.quantity * self.price, 2)
+    
+    @computed_field
+    @property
+    def cf_direction(self) -> int:
+        if self.leg_type in [LegType.SELL, LegType.INTEREST, LegType.DIVIDEND, LegType.RENT]:
+            return 1
+        elif self.leg_type in [LegType.BUY, LegType.FEE, LegType.TAX]:
+            return -1
+        else: # OTHER
+            return 0
+
+    
+class Leg(LegCreate):
     
     leg_id: str = Field(
         default_factory=partial( # type: ignore
@@ -22,39 +57,9 @@ class Leg(BaseModel):
     user_id: str = Field(
         description='The ID of the user the transaction leg belongs to.',
     )
-    leg_type: LegType = Field(
-        description='The type of the transaction leg.',
-    )
-    acct_id: str = Field(
-        description='The ID of the account the transaction belongs to.',
-    )
-    prop_id: str = Field(
-        description='The ID of the property the transaction belongs to.',
-    )
-    quantity: float = Field(
-        description='The quantity of the transaction.',
-    )
-    price: float = Field(
-        description='The price of the transaction.',
-    )
-        
-    @computed_field
-    @property
-    def amount(self) -> float:
-        return round(self.quantity * self.price, 2)
-    
-    @computed_field
-    @property
-    def cf_direction(self) -> int:
-        if self.leg_type in [LegType.SELL, LegType.INTEREST, LegType.DIVIDEND, LegType.RENT]:
-            return 1
-        elif self.leg_type in [LegType.BUY, LegType.FEE, LegType.TAX]:
-            return -1
-        else: # OTHER
-            return 0
-        
 
-class Transaction(BaseModel):
+        
+class TransactionWOLegs(BaseModel):
     trans_id: str = Field(
         default_factory=partial( # type: ignore
             id_generator,
@@ -73,9 +78,26 @@ class Transaction(BaseModel):
     description: str = Field(
         description='The description of the transaction.',
     )
+    
+class TransactionCreate(TransactionWOLegs):
+
+    legs: list[LegCreate] = Field(
+        description='The legs of the transaction.',
+    )
+    
+    def to_transaction_wolgs(self) -> TransactionWOLegs:
+        return TransactionWOLegs(
+            **self.model_dump(exclude={'legs'})
+        )
+    
+    
+class Transaction(TransactionWOLegs):
+
     legs: list[Leg] = Field(
         description='The legs of the transaction.',
     )
+    
+
 
     @model_validator(mode='after')
     def check_legs(self) -> 'Transaction':

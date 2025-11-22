@@ -9,7 +9,8 @@ from sqlalchemy import text, desc
 from src.app.model.enums import CurType
 from src.app.model.registry import Property, PrivatePropOwnership, Account
 from src.app.repository.orm import PropertyORM, PrivatePropOwnershipORM, AccountORM
-from src.app.model.exceptions import AlreadyExistError, FKNoDeleteUpdateError, NotExistError
+from src.app.model.exceptions import NotExistError
+from src.app.repository.orm import infer_integrity_error
 
 class PropertyRepository:
     
@@ -49,7 +50,7 @@ class PropertyRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise AlreadyExistError(details=str(e))
+            raise infer_integrity_error(e, during_creation=True)
     
     async def adds(self, properties: List[Property]):
         """Batch insert multiple properties in a single transaction."""
@@ -59,7 +60,7 @@ class PropertyRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise AlreadyExistError(details=str(e))
+            raise infer_integrity_error(e, during_creation=True)
         
     async def remove(self, prop_id: str):
         sql = delete(PropertyORM).where(PropertyORM.prop_id == prop_id)
@@ -68,7 +69,7 @@ class PropertyRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise FKNoDeleteUpdateError(details=str(e))
+            raise infer_integrity_error(e, during_creation=False)
         
     async def update(self, property: Property):
         property_orm = self.toPropertyORM(property)
@@ -164,7 +165,7 @@ class PrivatePropOwnershipRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise AlreadyExistError(details=str(e))
+            raise infer_integrity_error(e, during_creation=True)
         
     async def remove(self, ownership_id: str):
         sql = delete(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.ownership_id == ownership_id)
@@ -173,7 +174,7 @@ class PrivatePropOwnershipRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise FKNoDeleteUpdateError(details=str(e))
+            raise infer_integrity_error(e, during_creation=False)
         
     async def remove_by_prop_id(self, prop_id: str):
         sql = delete(PrivatePropOwnershipORM).where(PrivatePropOwnershipORM.prop_id == prop_id)
@@ -182,7 +183,7 @@ class PrivatePropOwnershipRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise FKNoDeleteUpdateError(details=str(e))
+            raise infer_integrity_error(e, during_creation=False)
         
     async def update(self, private_prop_ownership: PrivatePropOwnership):
         private_prop_ownership_orm = self.toPrivatePropOwnershipORM(private_prop_ownership)
@@ -255,7 +256,7 @@ class AccountRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise AlreadyExistError(details=str(e))
+            raise infer_integrity_error(e, during_creation=True)
         
     async def remove(self, acct_id: str):
         sql = delete(AccountORM).where(AccountORM.acct_id == acct_id)
@@ -264,7 +265,7 @@ class AccountRepository:
             await self.db_session.commit()
         except IntegrityError as e:
             await self.db_session.rollback()
-            raise FKNoDeleteUpdateError(details=str(e))
+            raise infer_integrity_error(e, during_creation=False)
         
     async def update(self, account: Account):
         account_orm = self.toAccountORM(account)

@@ -6,7 +6,27 @@ from sqlalchemy_utils import EmailType, PasswordType, PhoneNumberType, ChoiceTyp
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from datetime import date
 from src.app.model.enums import CurType, PropertyType, PlanType, LegType
+from src.app.model.exceptions import FKNoDeleteUpdateError, FKNotExistError, AlreadyExistError
 
+def infer_integrity_error(e: IntegrityError, during_creation: bool = True) ->  FKNoDeleteUpdateError | FKNotExistError | AlreadyExistError | IntegrityError:
+    # TODO: enhance this when use other backend engine
+    origin_message = str(e.orig).lower()
+    if 'foreign key' in origin_message:
+        # sqlite message: FOREIGN KEY constraint failed
+        # mysql message: a foreign key constraint fails
+        if during_creation:
+            # during object creation, error = entry does not exist in child/lower level table
+            # e.g., if contact does not exist, customer should not be created
+            return FKNotExistError(details=str(e))
+        else:
+            # during update/delete, error = on_delete/on_update failed
+            return FKNoDeleteUpdateError(details=str(e))
+    if 'unique' in origin_message or 'duplicate' in origin_message:
+        # sqlite message: UNIQUE constraint failed
+        # mysql message: Duplicate entry
+        return AlreadyExistError(details=str(e))
+    
+    return e
 
 
 def get_class_by_tablename(tablename):

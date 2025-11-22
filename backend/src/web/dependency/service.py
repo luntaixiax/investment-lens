@@ -11,7 +11,10 @@ from src.app.repository.registry import PropertyRepository, \
 from src.app.service.registry import RegistryService, AccountService
 from src.app.service.email import EmailService
 from src.web.dependency.repository import get_property_repository, \
-    get_private_prop_ownership_repository, get_account_repository
+    get_private_prop_ownership_repository, get_account_repository, \
+    get_transaction_body_repository, get_leg_repository
+from src.app.service.transaction import TransactionService
+from src.app.repository.transaction import TransactionBodyRepository, LegRepository
 
 async def get_user_service(
     user_repository: UserRepository = Depends(get_user_repository)
@@ -44,3 +47,12 @@ async def get_account_service(
     account_repository: AccountRepository = Depends(get_account_repository)
 ) -> AccountService:
     return AccountService(account_repository=account_repository)
+
+async def get_transaction_service(
+    transaction_body_repository: TransactionBodyRepository = Depends(get_transaction_body_repository),
+    leg_repository: LegRepository = Depends(get_leg_repository)
+) -> TransactionService:
+    return TransactionService(
+        transaction_body_repository=transaction_body_repository,
+        leg_repository=leg_repository
+    )

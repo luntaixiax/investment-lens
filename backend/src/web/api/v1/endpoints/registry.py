@@ -81,7 +81,7 @@ async def register_private_property(
         current_user.user_id
     )
     
-@router.post("/delist_public_property")
+@router.delete("/delist_public_property")
 async def delist_public_property(
     property_id: str,
     admin_user: User = Depends(get_admin_user),
@@ -91,7 +91,7 @@ async def delist_public_property(
         property_id
     )
     
-@router.post("/delist_private_property")
+@router.delete("/delist_private_property")
 async def delist_private_property(
     property_id: str,
     current_user: User = Depends(get_current_user),
@@ -102,7 +102,7 @@ async def delist_private_property(
         current_user.user_id
     )
     
-@router.post("/update_public_property")
+@router.put("/update_public_property")
 async def update_public_property(
     property: Property,
     admin_user: User = Depends(get_admin_user),
@@ -162,7 +162,7 @@ async def create_account(
         current_user.user_id
     )
     
-@router.post("/remove_account")
+@router.delete("/remove_account")
 async def remove_account(
     acct_id: str,
     current_user: User = Depends(get_current_user),
@@ -173,7 +173,7 @@ async def remove_account(
         current_user.user_id
     )
     
-@router.post("/update_account")
+@router.put("/update_account")
 async def update_account(
     account: Account,
     current_user: User = Depends(get_current_user),

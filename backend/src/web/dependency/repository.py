@@ -8,6 +8,7 @@ from src.app.utils.secrets import get_async_db_url, get_sync_db_url
 from src.app.repository.market import FxRepository
 from src.app.repository.registry import PropertyRepository, PrivatePropOwnershipRepository, \
     AccountRepository
+from src.app.repository.transaction import TransactionBodyRepository, LegRepository
 
 # Global state for caching engine and sessionmaker
 _async_engine: AsyncEngine | None = None
@@ -101,6 +102,17 @@ async def get_account_repository(
     async_session: AsyncSession = Depends(get_async_session)
 ) -> AccountRepository:
     return AccountRepository(db_session=async_session)
+
+async def get_transaction_body_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> TransactionBodyRepository:
+    return TransactionBodyRepository(db_session=async_session)
+
+async def get_leg_repository(
+    async_session: AsyncSession = Depends(get_async_session)
+) -> LegRepository:
+    return LegRepository(db_session=async_session)
+
 
 if __name__ == "__main__":
     from sqlalchemy_utils import database_exists, create_database, drop_database

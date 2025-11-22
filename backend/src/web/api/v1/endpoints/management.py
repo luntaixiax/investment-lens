@@ -91,7 +91,7 @@ async def logout(
     )
     return response
     
-@router.post("/remove_user")
+@router.delete("/remove_user")
 async def remove_user(
     user_id: str,
     user_service: UserService = Depends(get_user_service),
@@ -100,7 +100,7 @@ async def remove_user(
     await user_service.remove_user(user_id)
     
     
-@router.post("/remove_user_by_name")
+@router.delete("/remove_user_by_name")
 async def remove_user_by_name(
     username: str,
     user_service: UserService = Depends(get_user_service),
@@ -108,7 +108,7 @@ async def remove_user_by_name(
 ) -> None:
     await user_service.remove_user_by_name(username)
     
-@router.post("/update_user")
+@router.put("/update_user")
 async def update_user(
     user: UserCreate,
     user_service: UserService = Depends(get_user_service),
@@ -153,7 +153,7 @@ async def validate_reset_password_token(
 ) -> User:
     return await auth_service.validate_reset_password_token(token)
 
-@router.post("/reset_password")
+@router.put("/reset_password")
 async def reset_password(
     token: str,
     new_password: str,
