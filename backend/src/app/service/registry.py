@@ -289,6 +289,8 @@ class AccountService:
             )
         try:
             await self.account_repository.add(account)
+            # Invalidate cache after successful creation - only for this user
+            await cache.delete(f"accounts_{user_id}")
         except AlreadyExistError as e:
             raise AlreadyExistError(
                 f"Account {account.acct_name} already exist",
@@ -300,8 +302,9 @@ class AccountService:
         existing_account = await self.get_account(acct_id, user_id)
         try:
             await self.account_repository.remove(acct_id)
-            # Clear cache after successful deletion
-            await cache.invalidate_tags(tags=['user_accounts'])
+            # Clear cache after successful deletion - only for this user
+            await cache.delete(f"account_{acct_id}_{user_id}")
+            await cache.delete(f"accounts_{user_id}")
         except FKNoDeleteUpdateError as e:
             raise FKNoDeleteUpdateError(
                 f"Account {acct_id} is associated with other data, cannot delete",
@@ -320,8 +323,9 @@ class AccountService:
         
         try:
             await self.account_repository.update(account)
-            # Invalidate cache after successful update
-            await cache.invalidate_tags(tags=['user_accounts'])
+            # Invalidate cache after successful update - only for this user
+            await cache.delete(f"account_{account.acct_id}_{user_id}")
+            await cache.delete(f"accounts_{user_id}")
         except NotExistError as e:
             raise NotExistError(
                 f"Account {account.acct_name} does not exist",

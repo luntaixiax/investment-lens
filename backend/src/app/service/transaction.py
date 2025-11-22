@@ -1,7 +1,11 @@
+from datetime import timedelta
+from yokedcache import cached
 from src.app.model.transaction import Leg, LegCreate
 from src.app.repository.transaction import TransactionBodyRepository, LegRepository
 from src.app.model.transaction import TransactionCreate, Transaction
 from src.app.model.exceptions import OpNotPermittedError, AlreadyExistError, FKNotExistError, NotExistError, FKNoDeleteUpdateError
+from src.app.repository.cache import cache
+from src.app.utils.cache import deserialize_cached_model
 
 class TransactionService:
     
@@ -57,7 +61,14 @@ class TransactionService:
                 f"Some accounts or properties do not exist",
                 details=str(e) # don't pass database info
             )
-            
+
+    @deserialize_cached_model(Transaction)
+    @cached(
+        cache=cache, 
+        key_builder=lambda self, trans_id, user_id: f"transaction_{trans_id}_{user_id}", 
+        ttl=int(timedelta(hours=24).total_seconds()),
+        tags=['user_transactions']
+    )
     async def get_transaction(self, trans_id: str, user_id: str) -> Transaction:
         try:
             transaction_wolgs = await self.transaction_body_repository.get(trans_id)
@@ -124,6 +135,9 @@ class TransactionService:
                 details=str(e) # don't pass database info
             )
             
+        # Invalidate cache after successful update
+        await cache.delete(f"transaction_{trans_id}_{user_id}")
+            
     async def update_transaction(self, transaction: TransactionCreate, user_id: str):
         if transaction.user_id != user_id:
             raise OpNotPermittedError(
@@ -184,3 +198,6 @@ class TransactionService:
                 f"Transaction {transaction.trans_id} is associated with other data, cannot update",
                 details=str(e) # don't pass database info
             )
+            
+        # Invalidate cache after successful update
+        await cache.delete(f"transaction_{transaction.trans_id}_{user_id}")
